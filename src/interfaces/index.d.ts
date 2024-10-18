@@ -14,6 +14,19 @@ export interface IPost {
   category: { id: number };
 }
 
+export interface IPoster {
+  _id: number;
+  title: string;
+  content: string;
+  category: string;
+  topic: string;
+  institution: string;
+  urlPdf: string;
+  authors: Array;//.,status: "published" | "draft" | "rejected";
+}
+
+authors: [];
+
 export interface IEvent {
   id: number;
   _id: number;
@@ -36,8 +49,6 @@ export interface IAgenda {
   category: { id: number };
   valory: string;
 }
-
-
 
 /* 
         "location": {
