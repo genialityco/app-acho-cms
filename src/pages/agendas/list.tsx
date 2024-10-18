@@ -20,64 +20,73 @@ import {
 } from "@mantine/core";
 
 import { ColumnFilter, ColumnSorter } from "../../components/table";
-import type { FilterElementProps, ICategory, IPost } from "../../interfaces";
+import type { FilterElementProps, ICategory, IAgenda } from "../../interfaces";
 
-export const PostList: React.FC = () => {
-  const columns = React.useMemo<ColumnDef<IPost>[]>(
+export const AgendaList: React.FC = () => {
+  const columns = React.useMemo<ColumnDef<IAgenda>[]>(
     () => [
       {
         id: "id",
         header: "ID",
-        accessorKey: "id",
+        accessorKey: "_id",
       },
       {
-        id: "title",
-        header: "Title",
-        accessorKey: "title",
+        id: "eventId.name",
+        header: "Name",
+        accessorKey: "eventId.name",
         meta: {
           filterOperator: "contains",
         },
-      },
-      {
-        id: "status",
-        header: "Status",
-        accessorKey: "status",
-        meta: {
-          filterElement: function render(props: FilterElementProps) {
-            return (
-              <Select
-                defaultValue="published"
-                data={[
-                  { label: "Published", value: "published" },
-                  { label: "Draft", value: "draft" },
-                  { label: "Rejected", value: "rejected" },
-                ]}
-                {...props}
-              />
-            );
-          },
-          filterOperator: "eq",
-        },
-      },
-      {
-        id: "category.id",
-        header: "Category",
+      },{
+        id: "sessions",
+        header: "# Sesiones",
         enableColumnFilter: false,
-        accessorKey: "category.id",
+        accessorKey: "sessions",
         cell: function render({ getValue, table }) {
-          const meta = table.options.meta as {
-            categoriesData: GetManyResponse<ICategory>;
-          };
-          const category = meta.categoriesData?.data.find(
-            (item) => item.id === getValue(),
-          );
-          return category?.title ?? "Loading...";
-        },
-      },
+          const value = getValue();
+          return (value?.length ?? "-");
+
+        }},
+      // {
+      //   id: "status",
+      //   header: "Status",
+      //   accessorKey: "status",
+      //   meta: {
+      //     filterElement: function render(props: FilterElementProps) {
+      //       return (
+      //         <Select
+      //           defaultValue="published"
+      //           data={[
+      //             { label: "Published", value: "published" },
+      //             { label: "Draft", value: "draft" },
+      //             { label: "Rejected", value: "rejected" },
+      //           ]}
+      //           {...props}
+      //         />
+      //       );
+      //     },
+      //     filterOperator: "eq",
+      //   },
+      // },
+      // {
+      //   id: "category.id",
+      //   header: "Category",
+      //   enableColumnFilter: false,
+      //   accessorKey: "category.id",
+      //   cell: function render({ getValue, table }) {
+      //     const meta = table.options.meta as {
+      //       categoriesData: GetManyResponse<ICategory>;
+      //     };
+      //     const category = meta.categoriesData?.data.find(
+      //       (item) => item.id === getValue(),
+      //     );
+      //     return category?.title ?? "Loading...";
+      //   },
+      // },
       {
-        id: "createdAt",
-        header: "Created At",
-        accessorKey: "createdAt",
+        id: "startDate",
+        header: "start Date",
+        accessorKey: "startDate",
         cell: function render({ getValue }) {
           return <DateField value={getValue() as string} format="LLL" />;
         },
@@ -86,7 +95,7 @@ export const PostList: React.FC = () => {
       {
         id: "actions",
         header: "Actions",
-        accessorKey: "id",
+        accessorKey: "_id",
         enableColumnFilter: false,
         enableSorting: false,
         cell: function render({ getValue }) {
@@ -117,20 +126,20 @@ export const PostList: React.FC = () => {
     columns,
   });
 
-  const categoryIds = tableData?.data?.map((item) => item.category.id) ?? [];
-  const { data: categoriesData } = useMany<ICategory>({
-    resource: "categories",
-    ids: categoryIds,
-    queryOptions: {
-      enabled: categoryIds.length > 0,
-    },
-  });
+  //const categoryIds = tableData?.data?.map((item) => item.category.id) ?? [];
+  // const { data: categoriesData } = useMany<ICategory>({
+  //   resource: "categories",
+  //   ids: categoryIds,
+  //   queryOptions: {
+  //     enabled: categoryIds.length > 0,
+  //   },
+  // });
 
   setOptions((prev) => ({
     ...prev,
     meta: {
       ...prev.meta,
-      categoriesData,
+      //categoriesData,
     },
   }));
 

@@ -1,19 +1,9 @@
-import {
-  type AuthProvider,
-  Authenticated,
-  GitHubBanner,
-  Refine,
-} from "@refinedev/core";
-import {
-  AuthPage,
-  ThemedLayoutV2,
-  ErrorComponent,
-  useNotificationProvider,
-  RefineThemes,
-} from "@refinedev/mantine";
+import { type AuthProvider, Authenticated, GitHubBanner, Refine } from "@refinedev/core";
+import { AuthPage, ThemedLayoutV2, ErrorComponent, useNotificationProvider, RefineThemes } from "@refinedev/mantine";
 import { NotificationsProvider } from "@mantine/notifications";
 import { MantineProvider, Global } from "@mantine/core";
 import dataProvider from "@refinedev/simple-rest";
+import {customGenRestDataProvider}  from "./components/dataProvider/customGenRestDataProvider";
 import routerProvider, {
   NavigateToResource,
   CatchAllNavigate,
@@ -24,6 +14,9 @@ import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { IconBrandGoogle, IconBrandGithub } from "@tabler/icons-react";
 
 import { PostCreate, PostEdit, PostList, PostShow } from "./pages";
+import { EventCreate, EventEdit, EventList, EventShow } from "./pages";
+import { AgendaCreate, AgendaEdit, AgendaList, AgendaShow } from "./pages";
+import { PosterCreate, PosterEdit, PosterList, PosterShow } from "./pages";
 
 /**
  *  mock auth credentials to simulate authentication
@@ -146,34 +139,50 @@ const App: React.FC = () => {
     getIdentity: async () => ({
       id: 1,
       name: "Jane Doe",
-      avatar:
-        "https://unsplash.com/photos/IWLOvomUmWU/download?force=true&w=640",
+      avatar: "https://unsplash.com/photos/IWLOvomUmWU/download?force=true&w=640",
     }),
   };
 
   return (
     <BrowserRouter>
       <GitHubBanner />
-      <MantineProvider
-        theme={RefineThemes.Blue}
-        withNormalizeCSS
-        withGlobalStyles
-      >
+      <MantineProvider theme={RefineThemes.Blue} withNormalizeCSS withGlobalStyles>
         <Global styles={{ body: { WebkitFontSmoothing: "auto" } }} />
         <NotificationsProvider position="top-right">
           <Refine
-            dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
+            dataProvider={customGenRestDataProvider}
+            // {dataProvider("https://api.fake-rest.refine.dev")}
             authProvider={authProvider}
             routerProvider={routerProvider}
             notificationProvider={useNotificationProvider}
             resources={[
               {
                 name: "posts",
-                list: "/posts",
+                list: "/posts/listar",
                 show: "/posts/show/:id",
                 edit: "/posts/edit/:id",
                 create: "/posts/create",
-              },
+              },{
+                name: "events",
+                list: "/events",
+                show: "/events/show/:id",
+                edit: "/events/edit/:id",
+                create: "/events/create",
+              },{
+                //agendas/search?eventId=66f1e0b57c2e2fbdefa21271
+                name: "agendas",
+                list: "/agendas",
+                show: "/agendas/show/:id",
+                edit: "/agendas/edit/:id",
+                create: "/agendas/create",
+              },{
+                //agendas/search?eventId=66f1e0b57c2e2fbdefa21271
+                name: "posters",
+                list: "/posters",
+                show: "/posters/show/:id",
+                edit: "/posters/edit/:id",
+                create: "/posters/create",
+              }
             ]}
             options={{
               syncWithLocation: true,
@@ -183,27 +192,34 @@ const App: React.FC = () => {
             <Routes>
               <Route
                 element={
-                  <Authenticated
-                    key="authenticated-routes"
-                    fallback={<CatchAllNavigate to="/login" />}
-                  >
+                  <Authenticated key="authenticated-routes" fallback={<CatchAllNavigate to="/login" />}>
                     <ThemedLayoutV2>
                       <Outlet />
                     </ThemedLayoutV2>
                   </Authenticated>
                 }
               >
-                <Route
-                  index
-                  element={<NavigateToResource resource="posts" />}
-                />
+                <Route index element={<NavigateToResource resource="posters" />} />
 
-                <Route path="/posts">
-                  <Route index element={<PostList />} />
-                  <Route path="create" element={<PostCreate />} />
-                  <Route path="edit/:id" element={<PostEdit />} />
-                  <Route path="show/:id" element={<PostShow />} />
+                <Route path="/events">
+                  <Route index element={<EventList />} />
+                  <Route path="listar" index element={<EventList />} />
+                  <Route path="create" element={<  EventCreate />} />
+                  <Route path="edit/:id" element={<EventEdit />} />
+                  <Route path="show/:id" element={<EventShow />} />
                 </Route>
+                <Route path="/agendas">
+                  <Route index element={<AgendaList />} />
+                  <Route path="create" element={<  AgendaCreate />} />
+                  <Route path="edit/:id" element={<AgendaEdit />} />
+                  <Route path="show/:id" element={<AgendaShow />} />
+                </Route>
+                <Route path="/posters">
+                  <Route index element={<PosterList />} />
+                  <Route path="create" element={<  PosterCreate />} />
+                  <Route path="edit/:id" element={<PosterEdit />} />
+                  <Route path="show/:id" element={<PosterShow />} />
+                </Route>                
               </Route>
 
               <Route
@@ -258,14 +274,8 @@ const App: React.FC = () => {
                     />
                   }
                 />
-                <Route
-                  path="/forgot-password"
-                  element={<AuthPage type="forgotPassword" />}
-                />
-                <Route
-                  path="/update-password"
-                  element={<AuthPage type="updatePassword" />}
-                />
+                <Route path="/forgot-password" element={<AuthPage type="forgotPassword" />} />
+                <Route path="/update-password" element={<AuthPage type="updatePassword" />} />
               </Route>
 
               <Route

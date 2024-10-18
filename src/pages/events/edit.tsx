@@ -4,7 +4,7 @@ import MDEditor from "@uiw/react-md-editor";
 
 import type { ICategory } from "../../interfaces";
 
-export const PostEdit: React.FC = () => {
+export const EventEdit: React.FC = () => {
   const {
     saveButtonProps,
     getInputProps,

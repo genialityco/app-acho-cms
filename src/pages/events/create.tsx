@@ -2,7 +2,7 @@ import { Create, useForm, useSelect } from "@refinedev/mantine";
 import { Select, TextInput, Text } from "@mantine/core";
 import MDEditor from "@uiw/react-md-editor";
 
-export const PostCreate: React.FC = () => {
+export const EventCreate: React.FC = () => {
   const { saveButtonProps, getInputProps, errors } = useForm({
     initialValues: {
       title: "",
