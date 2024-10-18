@@ -127,7 +127,7 @@ export const PosterEdit: React.FC = () => {
   return (
     <Edit saveButtonProps={saveButtonProps}>
       <form >
-
+      <TextInput mt={8} label="eventId" placeholder="66f1e0b57c2e2fbdefa21271" {...getInputProps("eventId")} />
       <TextInput mt={8} label="title" placeholder="title" {...getInputProps("title")} />
       <TextInput mt={8} label="topic" placeholder="topic" {...getInputProps("topic")} />
 

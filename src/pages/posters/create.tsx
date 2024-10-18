@@ -6,6 +6,7 @@ import ArrayTagInput from "./arrayTagInput";
 export const PosterCreate: React.FC = () => {
   const { saveButtonProps, values, getInputProps, errors } = useForm({
     initialValues: {
+      "eventId":"66f1e0b57c2e2fbdefa21271",
       "title": "Investigacion Geniality"+(new Date().toString()),
       "category": "Science",
       "topic": "Quantum Physics",
@@ -46,7 +47,7 @@ export const PosterCreate: React.FC = () => {
   return (
     <Create saveButtonProps={saveButtonProps}>
     <form >
-
+    <TextInput mt={8} label="eventId" placeholder="eventId" {...getInputProps("eventId")} />
     <TextInput mt={8} label="title" placeholder="title" {...getInputProps("title")} />
     <TextInput mt={8} label="topic" placeholder="topic" {...getInputProps("topic")} />
 
