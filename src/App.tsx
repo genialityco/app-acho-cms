@@ -13,7 +13,6 @@ import routerProvider, {
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { IconBrandGoogle, IconBrandGithub } from "@tabler/icons-react";
 
-import { PostCreate, PostEdit, PostList, PostShow } from "./pages";
 import { EventCreate, EventEdit, EventList, EventShow } from "./pages";
 import { AgendaCreate, AgendaEdit, AgendaList, AgendaShow } from "./pages";
 import { PosterCreate, PosterEdit, PosterList, PosterShow } from "./pages";
@@ -25,6 +24,7 @@ const authCredentials = {
   email: "demo@refine.dev",
   password: "demodemo",
 };
+
 
 const App: React.FC = () => {
   const authProvider: AuthProvider = {
