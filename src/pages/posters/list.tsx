@@ -30,11 +30,16 @@ import type { FilterElementProps, ICategory, IPoster } from "../../interfaces";
 export const PosterList: React.FC = () => {
   const columns = React.useMemo<ColumnDef<IPoster>[]>(
     () => [
+      // {
+      //   id: "id",
+      //   header: "ID",
+      //   accessorKey: "_id",
+      // },
       {
-        id: "id",
-        header: "ID",
-        accessorKey: "_id",
-      },
+        id: "votes",
+        header: "Votes",
+        accessorKey: "votes",
+      },      
       {
         id: "title",
         header: "Title",
