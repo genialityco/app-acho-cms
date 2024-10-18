@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build_ignore_errors": "refine build",
     "build": "tsc && refine build",
     "dev": "refine dev",
     "refine": "refine",
