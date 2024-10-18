@@ -72,43 +72,6 @@ export const PosterList: React.FC = () => {
         header: "Documento",
         accessorKey: "urlPdf",
       },      
-
-      // {
-      //   id: "status",
-      //   header: "Status",
-      //   accessorKey: "status",
-      //   meta: {
-      //     filterElement: function render(props: FilterElementProps) {
-      //       return (
-      //         <Select
-      //           defaultValue="published"
-      //           data={[
-      //             { label: "Published", value: "published" },
-      //             { label: "Draft", value: "draft" },
-      //             { label: "Rejected", value: "rejected" },
-      //           ]}
-      //           {...props}
-      //         />
-      //       );
-      //     },
-      //     filterOperator: "eq",
-      //   },
-      // },
-      // {
-      //   id: "category.id",
-      //   header: "Category",
-      //   enableColumnFilter: false,
-      //   accessorKey: "category.id",
-      //   cell: function render({ getValue, table }) {
-      //     const meta = table.options.meta as {
-      //       categoriesData: GetManyResponse<ICategory>;
-      //     };
-      //     const category = meta.categoriesData?.data.find(
-      //       (item) => item.id === getValue(),
-      //     );
-      //     return category?.title ?? "Loading...";
-      //   },
-      // },
       {
         id: "startDate",
         header: "start Date",

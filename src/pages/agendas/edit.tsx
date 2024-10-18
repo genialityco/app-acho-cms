@@ -4,7 +4,7 @@ import MDEditor from "@uiw/react-md-editor";
 import EditSessionsForm from "./editSessionsForm";
 import type { ICategory } from "../../interfaces";
 import {DateField} from  "@refinedev/mantine";
-import { DatePicker } from '@mantine/dates';
+import { DatePicker,DateTimePicker } from '@mantine/dates';
 import { v4 as uuidv4 } from 'uuid';
 import dayjs from "dayjs";
 
@@ -156,7 +156,7 @@ export const AgendaEdit: React.FC = () => {
               required
             />
             <Group grow>
-              <DatePicker
+              <DateTimePicker
                 label="Start Date and Time"
                 placeholder="Select start date and time"
                 {...getInputProps(`sessions.${index}.startDateTime`)}
@@ -165,7 +165,7 @@ export const AgendaEdit: React.FC = () => {
                 required
               />
          
-              <DatePicker
+              <DateTimePicker
                 label="End Date and Time"
                 placeholder="Select end date and time"
                 
