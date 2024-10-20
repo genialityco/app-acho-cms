@@ -7,28 +7,18 @@ import { List, ShowButton, EditButton, DeleteButton, DateField } from "@refinede
 import { Box, Group, ScrollArea, Select, Table, Pagination } from "@mantine/core";
 
 import { ColumnFilter, ColumnSorter } from "../../components/table";
-import type { FilterElementProps, ICategory, IPoster } from "../../interfaces";
-/*        "_id": "670ed4f0dd7cd216bbe00091",
-        "title": "Quantum Physics Insights",
-        "category": "Science",
-        "topic": "Quantum Physics",
-        "institution": "MIT",
-        "authors": [
-          "John Doe",
-          "Jane Smith"
-        ],
-        "votes": 11,
-        "urlPdf": "https://firebasestorage.googleapis.com/v0/b/global-auth-49737.appspot.com/o/b69ffc15-fabc-483b-aba7-1c24c9cd62f4.pdf?alt=media&token=eff69385-cd8e-437e-a81e-f1921fb008fb",
-        "eventId": "66f1e0b57c2e2fbdefa21271",
-        "createdAt": "2024-10-15T20:47:44.515Z",
-        "updatedAt": "2024-10-16T14:06:33.348Z",
-        "__v": 1,
-        "voters": [
-          "670848c20ebe6b389db58f4e"
-        ]
+import type { FilterElementProps, ICategory, ISpeaker } from "../../interfaces";
+/*  export interface ISpeaker {
+  _id: number;
+  names: string;
+  description: string;
+  location: string;
+  eventId: { _id: number };
+  imageUrl:string
+}
       }*/
-export const PosterList: React.FC = () => {
-  const columns = React.useMemo<ColumnDef<IPoster>[]>(
+export const SpeakerList: React.FC = () => {
+  const columns = React.useMemo<ColumnDef<ISpeaker>[]>(
     () => [
       // {
       //   id: "id",
@@ -36,62 +26,51 @@ export const PosterList: React.FC = () => {
       //   accessorKey: "_id",
       // },
       {
-        id: "votes",
-        header: "Votes",
-        accessorKey: "votes",
+        id: "names",
+        header: "Nombre",
+        accessorKey: "names",
         meta: {
-          width:'7%'
+          //width:'7%',
+          filterOperator: "contains",
         },
       },      
       {
-        id: "title",
-        header: "Title",
-        accessorKey: "title",
-        meta: {
-          filterOperator: "contains",
-          width:'25%'
-        },
-      },
-      {
-        id: "category",
-        header: "Category",
-        accessorKey: "category",
+        id: "description",
+        header: "Description",
+        accessorKey: "description",
         meta: {
           filterOperator: "contains",
         },
       },
       {
-        id: "topic",
-        header: "Topic",
-        accessorKey: "topic",
+        id: "location",
+        header: "Location",
+        accessorKey: "location",
         meta: {
           filterOperator: "contains",
-           width:'7%'
         },
       },
       {
-        id: "authors",
-        header: "Authors",
-        accessorKey: "authors",
+        id: "isInternational",
+        header: "isInternational",
+        accessorKey: "isInternational",
         meta: {
           filterOperator: "contains",
-          width:'20%'
         },
       },
       {
-        id: "urlPdf",
-        header: "Documento",
-        accessorKey: "urlPdf",
+        id: "eventId",
+        header: "EventId",
+        accessorKey: "eventId",
+        meta: {
+          filterOperator: "contains",
+        },
+      },
+      {
+        id: "imageUrl",
+        header: "Image",
+        accessorKey: "imageUrl",
       },      
-      {
-        id: "startDate",
-        header: "start Date",
-        accessorKey: "startDate",
-        cell: function render({ getValue }) {
-          return <DateField value={getValue() as string} format="LLL" />;
-        },
-        enableColumnFilter: false,
-      },
       {
         id: "actions",
         header: "Actions",

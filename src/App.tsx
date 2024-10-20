@@ -2,7 +2,6 @@ import { type AuthProvider, Authenticated, GitHubBanner, Refine } from "@refined
 import { AuthPage, ThemedLayoutV2, ErrorComponent, useNotificationProvider, RefineThemes } from "@refinedev/mantine";
 import { NotificationsProvider } from "@mantine/notifications";
 import { MantineProvider, Global } from "@mantine/core";
-import dataProvider from "@refinedev/simple-rest";
 import {customGenRestDataProvider}  from "./components/dataProvider/customGenRestDataProvider";
 import routerProvider, {
   NavigateToResource,
@@ -16,6 +15,7 @@ import { IconBrandGoogle, IconBrandGithub } from "@tabler/icons-react";
 import { EventCreate, EventEdit, EventList, EventShow } from "./pages";
 import { AgendaCreate, AgendaEdit, AgendaList, AgendaShow } from "./pages";
 import { PosterCreate, PosterEdit, PosterList, PosterShow } from "./pages";
+import { SpeakerCreate, SpeakerEdit, SpeakerList, SpeakerShow } from "./pages";
 
 /**
  *  mock auth credentials to simulate authentication
@@ -145,7 +145,6 @@ const App: React.FC = () => {
 
   return (
     <BrowserRouter>
-      <GitHubBanner />
       <MantineProvider theme={RefineThemes.Blue} withNormalizeCSS withGlobalStyles>
         <Global styles={{ body: { WebkitFontSmoothing: "auto" } }} />
         <NotificationsProvider position="top-right">
@@ -182,6 +181,13 @@ const App: React.FC = () => {
                 show: "/posters/show/:id",
                 edit: "/posters/edit/:id",
                 create: "/posters/create",
+              },{
+                //agendas/search?eventId=66f1e0b57c2e2fbdefa21271
+                name: "speakers",
+                list: "/speakers",
+                show: "/speakers/show/:id",
+                edit: "/speakers/edit/:id",
+                create: "/speakers/create",
               }
             ]}
             options={{
@@ -219,7 +225,13 @@ const App: React.FC = () => {
                   <Route path="create" element={<  PosterCreate />} />
                   <Route path="edit/:id" element={<PosterEdit />} />
                   <Route path="show/:id" element={<PosterShow />} />
-                </Route>                
+                </Route>   
+                <Route path="/speakers">
+                <Route index element={<SpeakerList />} />
+                <Route path="create" element={<  SpeakerCreate />} />
+                <Route path="edit/:id" element={<SpeakerEdit />} />
+                <Route path="show/:id" element={<SpeakerShow />} />
+              </Route>              
               </Route>
 
               <Route

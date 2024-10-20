@@ -47,8 +47,22 @@ export interface IAgenda {
   organizationId: Number;
   //status: "published" | "draft" | "rejected";
   category: { id: number };
+  
+  
   valory: string;
 }
+
+export interface ISpeaker {
+  _id: number;
+  name: string;
+  description: string;
+  startDate: Date;
+  organizationId: Number;
+  //status: "published" | "draft" | "rejected";
+  category: { id: number };
+  valory: string;
+}
+
 
 /* 
         "location": {
