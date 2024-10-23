@@ -4,39 +4,14 @@ import { type ColumnDef, flexRender } from "@tanstack/react-table";
 import { type GetManyResponse, useMany } from "@refinedev/core";
 import { List, ShowButton, EditButton, DeleteButton, DateField } from "@refinedev/mantine";
 
-import { Box, Group, ScrollArea, Select, Table, Pagination,createStyles } from "@mantine/core";
+import { Box, Group, ScrollArea, Select, Table, Pagination } from "@mantine/core";
 
 import { ColumnFilter, ColumnSorter } from "../../components/table";
 import type { FilterElementProps, ICategory, IPoster } from "../../interfaces";
-/*        "_id": "670ed4f0dd7cd216bbe00091",
-        "title": "Quantum Physics Insights",
-        "category": "Science",
-        "topic": "Quantum Physics",
-        "institution": "MIT",
-        "authors": [
-          "John Doe",
-          "Jane Smith"
-        ],
-        "votes": 11,
-        "urlPdf": "https://firebasestorage.googleapis.com/v0/b/global-auth-49737.appspot.com/o/b69ffc15-fabc-483b-aba7-1c24c9cd62f4.pdf?alt=media&token=eff69385-cd8e-437e-a81e-f1921fb008fb",
-        "eventId": "66f1e0b57c2e2fbdefa21271",
-        "createdAt": "2024-10-15T20:47:44.515Z",
-        "updatedAt": "2024-10-16T14:06:33.348Z",
-        "__v": 1,
-        "voters": [
-          "670848c20ebe6b389db58f4e"
-        ]
-      }*/
 
-        const useStyles = createStyles((theme) => ({
-          td: {
-            maxWidth:'220px',
-            overflow:'hidden'
-          },
-        }));
 
 export const PosterList: React.FC = () => {
-  const { classes } = useStyles();
+
   const columns = React.useMemo<ColumnDef<IPoster>[]>(
     () => [
       // {
@@ -96,8 +71,8 @@ export const PosterList: React.FC = () => {
         accessorKey: "urlPdf",
         style: { 'whiteSpace': 'unset', overflow:'wrap' } ,
         meta: {
-          
-          width:'10%'
+          width:'10%',
+          style:{maxWidth:'200px',overflow:'hidden'}
         },
       },      
       {
@@ -166,7 +141,7 @@ export const PosterList: React.FC = () => {
       
     
       <List title={'Posters'+' Total:'+tableData?.total}> 
-      <p></p>
+      <Pagination position="left" total={pageCount} value={current} onChange={setCurrent} />
         <Table highlightOnHover  style={{ width: '100%',tableLayout:'auto'  }}>
           <thead>
             {getHeaderGroups().map((headerGroup) => (
@@ -195,7 +170,7 @@ export const PosterList: React.FC = () => {
               return (
                 <tr key={row.id}>
                   {row.getVisibleCells().map((cell) => {
-                    return <td className={classes.td} key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>;
+                    return <td  style={cell.column?.columnDef?.meta?.style?cell.column?.columnDef?.meta?.style:{}}  key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>;
                   })}
                 </tr>
               );
