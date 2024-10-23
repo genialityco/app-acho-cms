@@ -4,7 +4,7 @@ import { type ColumnDef, flexRender } from "@tanstack/react-table";
 import { type GetManyResponse, useMany } from "@refinedev/core";
 import { List, ShowButton, EditButton, DeleteButton, DateField } from "@refinedev/mantine";
 
-import { Box, Group, ScrollArea, Select, Table, Pagination } from "@mantine/core";
+import { Box, Group, ScrollArea, Select, Table, Pagination,createStyles } from "@mantine/core";
 
 import { ColumnFilter, ColumnSorter } from "../../components/table";
 import type { FilterElementProps, ICategory, IPoster } from "../../interfaces";
@@ -27,7 +27,16 @@ import type { FilterElementProps, ICategory, IPoster } from "../../interfaces";
           "670848c20ebe6b389db58f4e"
         ]
       }*/
+
+        const useStyles = createStyles((theme) => ({
+          td: {
+            maxWidth:'220px',
+            overflow:'hidden'
+          },
+        }));
+
 export const PosterList: React.FC = () => {
+  const { classes } = useStyles();
   const columns = React.useMemo<ColumnDef<IPoster>[]>(
     () => [
       // {
@@ -49,7 +58,8 @@ export const PosterList: React.FC = () => {
         accessorKey: "title",
         meta: {
           filterOperator: "contains",
-          width:'25%'
+          width:'25%',
+          style:{minWidth:'250px'}
         },
       },
       {
@@ -66,7 +76,8 @@ export const PosterList: React.FC = () => {
         accessorKey: "topic",
         meta: {
           filterOperator: "contains",
-           width:'7%'
+           width:'7%',
+           
         },
       },
       {
@@ -75,7 +86,8 @@ export const PosterList: React.FC = () => {
         accessorKey: "authors",
         meta: {
           filterOperator: "contains",
-          width:'20%'
+          width:'20%',
+          style:{minWidth:'200px'}
         },
       },
       {
@@ -125,7 +137,6 @@ export const PosterList: React.FC = () => {
     refineCore: {
       setCurrent,
       pageCount,
-      
       current,
       tableQuery: { data: tableData },
     },
@@ -156,13 +167,13 @@ export const PosterList: React.FC = () => {
     
       <List title={'Posters'+' Total:'+tableData?.total}> 
       <p></p>
-        <Table highlightOnHover>
+        <Table highlightOnHover  style={{ width: '100%',tableLayout:'auto'  }}>
           <thead>
             {getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <th key={header.id} width={(header.column?.columnDef?.meta?.width?header.column?.columnDef?.meta?.width:'')}>
+                    <th key={header.id} style={header.column?.columnDef?.meta?.style?header.column?.columnDef?.meta?.style:{}} width={(header.column?.columnDef?.meta?.width?header.column?.columnDef?.meta?.width:'')}>
             
                       {!header.isPlaceholder && (
                         <Group spacing="xs" noWrap>
@@ -184,7 +195,7 @@ export const PosterList: React.FC = () => {
               return (
                 <tr key={row.id}>
                   {row.getVisibleCells().map((cell) => {
-                    return <td style={{overflow:'hidden'}} key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>;
+                    return <td className={classes.td} key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>;
                   })}
                 </tr>
               );
