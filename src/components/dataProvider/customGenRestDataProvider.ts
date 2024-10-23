@@ -19,11 +19,16 @@ export const customGenRestDataProvider: DataProvider = {
   getList: async (params) => {
     // Call the original simple-rest provider's getList method
     const response = await restProvider.getList(params);
-    let transformedData = response.data?.data?.items ? response.data?.data.items : response.data;
-    return {
-      ...response,
-      data: transformedData, // Return modified data
-    };
+
+    let newResponse = {...response};
+    if (response.data?.data?.items){
+      newResponse.data = response.data?.data?.items;
+      newResponse.total  = response.data?.data?.totalItems;//response.data?.data?.items.length;
+
+      console.log('response',response)
+    }
+
+    return newResponse;
   },
 
   // Customizing getOne behavior

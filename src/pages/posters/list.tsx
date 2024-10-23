@@ -82,6 +82,11 @@ export const PosterList: React.FC = () => {
         id: "urlPdf",
         header: "Documento",
         accessorKey: "urlPdf",
+        style: { 'whiteSpace': 'unset', overflow:'wrap' } ,
+        meta: {
+          
+          width:'10%'
+        },
       },      
       {
         id: "startDate",
@@ -116,9 +121,11 @@ export const PosterList: React.FC = () => {
     getHeaderGroups,
     getRowModel,
     setOptions,
+    getPageCount,
     refineCore: {
       setCurrent,
       pageCount,
+      
       current,
       tableQuery: { data: tableData },
     },
@@ -145,7 +152,10 @@ export const PosterList: React.FC = () => {
 
   return (
     <ScrollArea>
-      <List>
+      
+    
+      <List title={'Posters'+' Total:'+tableData?.total}> 
+      <p></p>
         <Table highlightOnHover>
           <thead>
             {getHeaderGroups().map((headerGroup) => (
@@ -153,7 +163,7 @@ export const PosterList: React.FC = () => {
                 {headerGroup.headers.map((header) => {
                   return (
                     <th key={header.id} width={(header.column?.columnDef?.meta?.width?header.column?.columnDef?.meta?.width:'')}>
-                    {console.log('header.column',header.column?.columnDef?.meta)}
+            
                       {!header.isPlaceholder && (
                         <Group spacing="xs" noWrap>
                           <Box>{flexRender(header.column.columnDef.header, header.getContext())}</Box>
@@ -182,7 +192,9 @@ export const PosterList: React.FC = () => {
           </tbody>
         </Table>
         <br />
-        <Pagination position="right" total={pageCount} page={current} onChange={setCurrent} />
+
+        <Pagination position="left" total={pageCount} value={current} onChange={setCurrent} />
+
       </List>
     </ScrollArea>
   );

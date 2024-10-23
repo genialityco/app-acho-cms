@@ -54,13 +54,11 @@ export interface IAgenda {
 
 export interface ISpeaker {
   _id: number;
-  name: string;
+  names: string;
   description: string;
-  startDate: Date;
-  organizationId: Number;
-  //status: "published" | "draft" | "rejected";
-  category: { id: number };
-  valory: string;
+  location: string;
+  eventId: { _id: number };
+  imageUrl:string
 }
 
 
