@@ -1,4 +1,4 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import { useTable } from "@refinedev/react-table";
 import { type ColumnDef, flexRender } from "@tanstack/react-table";
 import { type GetManyResponse, useMany } from "@refinedev/core";
@@ -30,7 +30,8 @@ export const SpeakerList: React.FC = () => {
         header: "Nombre",
         accessorKey: "names",
         meta: {
-          //width:'7%',
+          
+          style:{minWidth:'200px'},
           filterOperator: "contains",
         },
       },      
@@ -39,6 +40,7 @@ export const SpeakerList: React.FC = () => {
         header: "Description",
         accessorKey: "description",
         meta: {
+          style:{minWidth:'300px'},
           filterOperator: "contains",
         },
       },
@@ -70,6 +72,15 @@ export const SpeakerList: React.FC = () => {
         id: "imageUrl",
         header: "Image",
         accessorKey: "imageUrl",
+        meta: {
+          style:{maxWidth:'150px',overflow:'hidden'},
+        },
+        cell: (row) => {
+          return (
+              <img style={{width:"80px"}} src={row.getValue()} />
+          );
+        },
+
       },      
       {
         id: "actions",
@@ -124,14 +135,15 @@ export const SpeakerList: React.FC = () => {
 
   return (
     <ScrollArea>
-      <List>
+      <List title={'Speakers'+' Total:'+tableData?.total}>
+      <Pagination position="left" total={pageCount} value={current} onChange={setCurrent} />
         <Table highlightOnHover>
           <thead>
             {getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <th key={header.id} width={(header.column?.columnDef?.meta?.width?header.column?.columnDef?.meta?.width:'')}>
+                    <th key={header.id} style={header.column?.columnDef?.meta?.style?header.column?.columnDef?.meta?.style:{}} width={(header.column?.columnDef?.meta?.width?header.column?.columnDef?.meta?.width:'')}>
                     {console.log('header.column',header.column?.columnDef?.meta)}
                       {!header.isPlaceholder && (
                         <Group spacing="xs" noWrap>
@@ -153,7 +165,7 @@ export const SpeakerList: React.FC = () => {
               return (
                 <tr key={row.id}>
                   {row.getVisibleCells().map((cell) => {
-                    return <td style={{overflow:'hidden'}} key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>;
+                    return <td style={cell.column?.columnDef?.meta?.style?cell.column?.columnDef?.meta?.style:{}} key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>;
                   })}
                 </tr>
               );
@@ -161,7 +173,7 @@ export const SpeakerList: React.FC = () => {
           </tbody>
         </Table>
         <br />
-        <Pagination position="right" total={pageCount} page={current} onChange={setCurrent} />
+        <Pagination position="left" total={pageCount} value={current} onChange={setCurrent} />
       </List>
     </ScrollArea>
   );

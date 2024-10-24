@@ -1,13 +1,13 @@
 import type { Column } from "@tanstack/react-table";
 
 export interface ICategory {
-  id: number;
+  _id: string;
   title: string;
   valory: string;
 }
 
 export interface IPost {
-  id: number;
+  _id: string;
   title: string;
   content: string;
   status: "published" | "draft" | "rejected";
@@ -15,7 +15,7 @@ export interface IPost {
 }
 
 export interface IPoster {
-  _id: number;
+  _id: string;
   title: string;
   content: string;
   category: string;
@@ -28,8 +28,7 @@ export interface IPoster {
 authors: [];
 
 export interface IEvent {
-  id: number;
-  _id: number;
+  _id: string;
   name: string;
   description: string;
   startDate: Date;
@@ -39,8 +38,7 @@ export interface IEvent {
 }
 
 export interface IAgenda {
-  id: number;
-  _id: number;
+  _id: string;
   name: string;
   description: string;
   startDate: Date;
@@ -53,12 +51,13 @@ export interface IAgenda {
 }
 
 export interface ISpeaker {
-  _id: number;
+  _id: string;
   names: string;
   description: string;
   location: string;
   eventId: { _id: number };
-  imageUrl:string
+  imageUrl:string;
+  isInternational: boolean;
 }
 
 
