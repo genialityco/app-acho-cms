@@ -2,7 +2,7 @@ import { type AuthProvider, Authenticated, GitHubBanner, Refine } from "@refined
 import { AuthPage, ThemedLayoutV2, ErrorComponent, useNotificationProvider, RefineThemes } from "@refinedev/mantine";
 import { NotificationsProvider } from "@mantine/notifications";
 import { MantineProvider, Global } from "@mantine/core";
-import {customGenRestDataProvider}  from "./components/dataProvider/customGenRestDataProvider";
+import { customGenRestDataProvider } from "./components/dataProvider/customGenRestDataProvider";
 import routerProvider, {
   NavigateToResource,
   CatchAllNavigate,
@@ -16,6 +16,7 @@ import { EventCreate, EventEdit, EventList, EventShow } from "./pages";
 import { AgendaCreate, AgendaEdit, AgendaList, AgendaShow } from "./pages";
 import { PosterCreate, PosterEdit, PosterList, PosterShow } from "./pages";
 import { SpeakerCreate, SpeakerEdit, SpeakerList, SpeakerShow } from "./pages";
+import { ModuleCreate, ModuleEdit, ModuleList, ModuleShow } from "./pages";
 
 /**
  *  mock auth credentials to simulate authentication
@@ -24,7 +25,6 @@ const authCredentials = {
   email: "demo@refine.dev",
   password: "demodemo",
 };
-
 
 const App: React.FC = () => {
   const authProvider: AuthProvider = {
@@ -161,34 +161,46 @@ const App: React.FC = () => {
                 show: "/posts/show/:id",
                 edit: "/posts/edit/:id",
                 create: "/posts/create",
-              },{
+              },
+              {
                 name: "events",
                 list: "/events",
                 show: "/events/show/:id",
                 edit: "/events/edit/:id",
                 create: "/events/create",
-              },{
+              },
+              {
                 //agendas/search?eventId=66f1e0b57c2e2fbdefa21271
                 name: "agendas",
                 list: "/agendas",
                 show: "/agendas/show/:id",
                 edit: "/agendas/edit/:id",
                 create: "/agendas/create",
-              },{
+              },
+              {
                 //agendas/search?eventId=66f1e0b57c2e2fbdefa21271
                 name: "posters",
                 list: "/posters",
                 show: "/posters/show/:id",
                 edit: "/posters/edit/:id",
                 create: "/posters/create",
-              },{
+              },
+              {
                 //agendas/search?eventId=66f1e0b57c2e2fbdefa21271
                 name: "speakers",
                 list: "/speakers",
                 show: "/speakers/show/:id",
                 edit: "/speakers/edit/:id",
                 create: "/speakers/create",
-              }
+              },
+              {
+                //agendas/search?eventId=66f1e0b57c2e2fbdefa21271
+                name: "modules",
+                list: "/modules",
+                show: "/modules/show/:id",
+                edit: "/modules/edit/:id",
+                create: "/modules/create",
+              },
             ]}
             options={{
               syncWithLocation: true,
@@ -210,28 +222,34 @@ const App: React.FC = () => {
                 <Route path="/events">
                   <Route index element={<EventList />} />
                   <Route path="listar" index element={<EventList />} />
-                  <Route path="create" element={<  EventCreate />} />
+                  <Route path="create" element={<EventCreate />} />
                   <Route path="edit/:id" element={<EventEdit />} />
                   <Route path="show/:id" element={<EventShow />} />
                 </Route>
                 <Route path="/agendas">
                   <Route index element={<AgendaList />} />
-                  <Route path="create" element={<  AgendaCreate />} />
+                  <Route path="create" element={<AgendaCreate />} />
                   <Route path="edit/:id" element={<AgendaEdit />} />
                   <Route path="show/:id" element={<AgendaShow />} />
                 </Route>
                 <Route path="/posters">
                   <Route index element={<PosterList />} />
-                  <Route path="create" element={<  PosterCreate />} />
+                  <Route path="create" element={<PosterCreate />} />
                   <Route path="edit/:id" element={<PosterEdit />} />
                   <Route path="show/:id" element={<PosterShow />} />
-                </Route>   
+                </Route>
                 <Route path="/speakers">
-                <Route index element={<SpeakerList />} />
-                <Route path="create" element={<  SpeakerCreate />} />
-                <Route path="edit/:id" element={<SpeakerEdit />} />
-                <Route path="show/:id" element={<SpeakerShow />} />
-              </Route>              
+                  <Route index element={<SpeakerList />} />
+                  <Route path="create" element={<SpeakerCreate />} />
+                  <Route path="edit/:id" element={<SpeakerEdit />} />
+                  <Route path="show/:id" element={<SpeakerShow />} />
+                </Route>
+                <Route path="/modules">
+                  <Route index element={<ModuleList />} />
+                  <Route path="create" element={<ModuleCreate />} />
+                  <Route path="edit/:id" element={<ModuleEdit />} />
+                  <Route path="show/:id" element={<ModuleShow />} />
+                </Route>                
               </Route>
 
               <Route
