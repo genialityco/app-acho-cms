@@ -14,7 +14,7 @@ import axios from "axios";
 
 
 
-export const PosterCreate: React.FC = () => {
+export const PosterEdit: React.FC = () => {
   const {
     saveButtonProps,
     getInputProps,
