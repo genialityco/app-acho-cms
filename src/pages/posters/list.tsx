@@ -74,6 +74,11 @@ export const PosterList: React.FC = () => {
           width:'10%',
           style:{maxWidth:'200px',overflow:'hidden'}
         },
+        cell: (row) => {
+          return (
+              <a target="_blank" href={row.getValue()}> LINK </a>
+          );
+        },
       },      
       {
         id: "startDate",

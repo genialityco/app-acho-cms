@@ -24,7 +24,7 @@ export const PosterCreate: React.FC = () => {
     errors,
   } = useForm({
     refineCoreProps: {
-      redirect: false,
+      redirect: true,
     },
     initialValues: {
       title: "Investigacion Geniality"+(new Date().toString()),
