@@ -1,5 +1,5 @@
 import { Edit, useForm, useSelect } from "@refinedev/mantine";
-import { Select, Button, Group, TextInput, Text, Stack, MultiSelect, Badge, useMantineTheme } from "@mantine/core";
+import { Select, Button, Group, TextInput, Text, Stack, MultiSelect, Badge, useMantineTheme, Loader } from "@mantine/core";
 import MDEditor from "@uiw/react-md-editor";
 import ArrayTagInput from "./arrayTagInput";
 import type { ICategory } from "../../interfaces";
@@ -8,59 +8,13 @@ import { DatePicker } from "@mantine/dates";
 import { v4 as uuidv4 } from "uuid";
 import dayjs from "dayjs";
 import { useState } from "react";
-import { Dropzone, DropzoneProps, IMAGE_MIME_TYPE, PDF_MIME_TYPE } from "@mantine/dropzone";
+import { Dropzone, DropzoneProps,PDF_MIME_TYPE } from "@mantine/dropzone";
 import { IconUpload, IconPhoto, IconX } from "@tabler/icons-react";
 import axios from "axios";
 
-function generateFirebaseId() {
-  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-  let id = "";
-  for (let i = 0; i < 24; i++) {
-    const randomIndex = Math.floor(Math.random() * chars.length);
-    id += chars[randomIndex];
-  }
-  return id;
-}
 
-// const resource = {
-//   sessions: [
-//     { id: 1, title: "Session 1", startDateTime: new Date(), endDateTime: new Date(), speakers: ["1"] },
-//     { id: 2, title: "Session 2", startDateTime: new Date(), endDateTime: new Date(), speakers: ["2", "3"] },
-//   ],
-// };
 
-const speakersList = [
-  { id: "1", name: "Speaker One" },
-  { id: "2", name: "Speaker Two" },
-  { id: "3", name: "Speaker Three" },
-];
-
-// const handleFormSubmit = (updatedSessions) => {
-//   console.log("Updated Sessions:", updatedSessions);
-// };
-
-/*
-"_id": "670ed4f0dd7cd216bbe00091",
-        "title": "Quantum Physics Insights",
-        "category": "Science",
-        "topic": "Quantum Physics",
-        "institution": "MIT",
-        "authors": [
-          "John Doe",
-          "Jane Smith"
-        ],
-        "votes": 11,
-        "urlPdf": "https://firebasestorage.googleapis.com/v0/b/global-auth-49737.appspot.com/o/b69ffc15-fabc-483b-aba7-1c24c9cd62f4.pdf?alt=media&token=eff69385-cd8e-437e-a81e-f1921fb008fb",
-        "eventId": "66f1e0b57c2e2fbdefa21271",
-        "createdAt": "2024-10-15T20:47:44.515Z",
-        "updatedAt": "2024-10-16T14:06:33.348Z",
-        "__v": 1,
-        "voters": [
-          "670848c20ebe6b389db58f4e"
-        ]
-*/
-
-export const PosterEdit: React.FC = () => {
+export const PosterCreate: React.FC = () => {
   const {
     saveButtonProps,
     getInputProps,
@@ -73,8 +27,8 @@ export const PosterEdit: React.FC = () => {
       redirect: false,
     },
     initialValues: {
-      _id: "",
-      title: "Quantum Physics Insights",
+      _id:"",
+      title: "Investigacion Geniality"+(new Date().toString()),
       category: "Science",
       topic: "Quantum Physics",
       institution: "MIT",
@@ -105,7 +59,7 @@ export const PosterEdit: React.FC = () => {
   const theme = useMantineTheme();
 
   // Handle file upload
-  const handleFileUpload = async () => {
+  const handleFileUpload = async (files) => {
     if (files.length === 0) {
       alert("No files selected!");
       return;
@@ -215,6 +169,7 @@ export const PosterEdit: React.FC = () => {
             onDrop={(files) => {
               console.log("accepted files", files);
               setFiles(files);
+              handleFileUpload(files);
             }}
             onReject={(files) => console.log("rejected files", files)}
             maxSize={3 * 1024 ** 4}
@@ -237,6 +192,7 @@ export const PosterEdit: React.FC = () => {
 
 
               <div>
+              {loading && <Loader color="blue" />}
               {/* Display Selected Files */}
               {files.length > 0 && (
                 <div style={{ marginTop: 10,marginBottom:10 }}>
@@ -259,9 +215,10 @@ export const PosterEdit: React.FC = () => {
             </Group>
           </Dropzone>
 
-          <Button disabled={(!(files.length > 0))} style={{ width: "100%" }} onClick={handleFileUpload} loading={loading} disabled={files.length === 0}>
-            Subir Archivo
-          </Button>
+          {/* <Button disabled={(!(files.length > 0))} style={{ width: "100%" }} onClick={handleFileUpload} loading={loading} disabled={files.length === 0}>
+             Subir Archivo
+           </Button>
+           */}
         </div>
       </form>
     </Edit>
