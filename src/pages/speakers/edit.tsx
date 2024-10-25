@@ -12,16 +12,6 @@ import { Dropzone, DropzoneProps, IMAGE_MIME_TYPE } from "@mantine/dropzone";
 import { IconUpload, IconPhoto, IconX } from '@tabler/icons-react';
 import axios from 'axios';
 
-function generateFirebaseId() {
-  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-  let id = "";
-  for (let i = 0; i < 24; i++) {
-    const randomIndex = Math.floor(Math.random() * chars.length);
-    id += chars[randomIndex];
-  }
-  return id;
-}
-
 // const resource = {
 //   sessions: [
 //     { id: 1, title: "Session 1", startDateTime: new Date(), endDateTime: new Date(), speakers: ["1"] },
@@ -85,7 +75,6 @@ export const SpeakerEdit: React.FC = () => {
 
   const theme = useMantineTheme();
 
-
       // Handle file upload
       const handleFileUpload = async () => {
         if (files.length === 0) {
@@ -107,7 +96,7 @@ export const SpeakerEdit: React.FC = () => {
             });
             console.log('yupi subio',response.data.imageUrl);
             getInputProps("imageUrl").onChange(response.data.imageUrl)
-            alert(`File uploaded successfully! URL: ${response.data}`);
+
         } catch (error) {
             console.error('Error uploading file:', error);
             alert('Failed to upload the file.');
@@ -186,29 +175,29 @@ export const SpeakerEdit: React.FC = () => {
           </Dropzone.Idle>
   
           <div>
-            <Text size="xl" inline>
-              Drag images here or click to select files
+          {/* Display Selected Files */}
+          {files.length > 0 && (
+            <div style={{ marginTop: 10,marginBottom:10 }}>
+              <Text size="l" color="dimmed">Archivo seleccionado para subir:</Text>
+              <Text size="xl" >{files.map((file) => file.name).join(", ")} </Text>
+            </div>
+          )}    
+          
+          {files.length <= 0 && (
+            <>
+            <Text size="l" >
+              Arrastra o haz click para cargar el archivo
             </Text>
             <Text size="sm" color="dimmed" inline mt={7}>
-              Attach as many files as you like, each file should not exceed 5mb
+              El archivo no debe exceder los 10MB
             </Text>
+            </>
+          )} 
           </div>
         </Group>
-      </Dropzone>
+      </Dropzone>                   
 
-
-      {/* Display Selected Files */}
-      {files.length > 0 && (
-        <div style={{ marginTop: 20 }}>
-            <Text>
-                Selected files: {files.map((file) => file.name).join(', ')}
-            </Text>
-        </div>
-
-                   
-
-    )}
-    <Button onClick={handleFileUpload} loading={loading} disabled={files.length === 0}>
+    <Button disabled={(!(files.length > 0))} style={{ width: "100%" }} onClick={handleFileUpload} loading={loading} >
     Upload
 </Button>
 
