@@ -74,6 +74,11 @@ export const SpeakerCreate: React.FC = () => {
 
   const theme = useMantineTheme();
 
+  const sanitizeFileName = (fileName) => {
+    // Remove or replace any characters that are not letters, numbers, dots, hyphens, or underscores
+    return fileName.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+  };
+
   // Handle file upload
   const handleFileUpload = async () => {
     if (files.length === 0) {
@@ -83,7 +88,9 @@ export const SpeakerCreate: React.FC = () => {
 
     const formData = new FormData();
     files.forEach((file) => {
-      formData.append("file", file); // Append the file to FormData
+      const sanitizedFileName = sanitizeFileName(file.name);
+      const sanitizedFile = new File([file], sanitizedFileName, { type: file.type });
+      formData.append("file", sanitizedFile); // Append the file to FormData
     });
 
     try {
