@@ -1,5 +1,5 @@
 import { Edit, useForm, useSelect } from "@refinedev/mantine";
-import { Select, Button, Group, TextInput, Text, Stack, UseSelect, MultiSelect } from "@mantine/core";
+import { Select, Button, Group, TextInput, Text, Stack } from "@mantine/core";
 import EditSessionsForm from "./editSessionsForm";
 import type { ICategory } from "../../interfaces";
 import { DateTimePicker } from "@mantine/dates";
@@ -92,11 +92,18 @@ export const AgendaEdit: React.FC = () => {
     setFieldValue("sessions", updatedSessions);
   };
 
-  // Fetch categories to allow users to select related categories
+  // Fetch speakers to allow users to select related categories
   const { selectProps: speakerSelectProps } = useSelect({
     resource: "speakers", // your API endpoint for categories
     optionLabel: "names", // property to display
     optionValue: "_id", // property to use as value
+    
+    //add really high limit to avoid default pagination in the API
+    pagination: {
+      pageSize: 1000,
+      current:1,
+      mode: "server",
+    },    
     //defaultValue: values?.categories.map(category => category.id), // pre-select related categories
   });
 
@@ -190,10 +197,16 @@ export const AgendaEdit: React.FC = () => {
                       style={{ marginLeft: "20px", marginBottom: "10px", display: "flex", alignItems: "flex-end" }}
                     >
                       <Select
+                        key={speakerIndex}
                         style={{ display: "inline" }}
                         label={`Speaker ${speakerIndex}`}
                         {...getInputProps(`sessions.${index}.speakers.${speakerIndex}._id`)}
-                        {...speakerSelectProps}
+                        data={speakerSelectProps.data}
+                        searchable={true}
+                        onSearchChange={(search)=>console.log('buscandooo',search)}
+                        filterDataOnExactSearchMatch={false}
+
+                        
                       />
                       <Button
                         style={{ backgroundColor: "rgba(200,150,150,0.7)" }}
