@@ -12,6 +12,20 @@ import type { FilterElementProps, ICategory, IPoster } from "../../interfaces";
 
 export const PosterList: React.FC = () => {
 
+
+  // 1. Custom Dropdown Filter Component
+const DropdownFilter = ({ column, options }) => {
+  return (
+      <Select
+          placeholder="Filter by..."
+          data={options.map((option) => ({ value: option, label: option }))}
+          value={column.getFilterValue() || ''}
+          onChange={(value) => column.setFilterValue(value || undefined)}
+          clearable
+      />
+  );
+};
+
   const columns = React.useMemo<ColumnDef<IPoster>[]>(
     () => [
       // {
@@ -43,6 +57,9 @@ export const PosterList: React.FC = () => {
         accessorKey: "category",
         meta: {
           filterOperator: "contains",
+          filterComponent: DropdownFilter,
+          filterOptions: ['Active', 'Inactive', 'Pending'], // Options to display in the dropdown
+
         },
       },
       {

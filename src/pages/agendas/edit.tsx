@@ -59,7 +59,7 @@ export const AgendaEdit: React.FC = () => {
       endDateTime: "2024-09-27T18:10:00.000Z",
       speakers: [],
       room: "",
-      moduleId: "",
+      moduleId: null,
     };
 
     setFieldValue("sessions", [...values.sessions, newSession]);
