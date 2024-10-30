@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { TextInput, Menu, ActionIcon, Stack, Group } from "@mantine/core";
 import { IconFilter, IconX, IconCheck } from "@tabler/icons-react";
 
@@ -12,6 +12,12 @@ export const ColumnFilter: React.FC<ColumnButtonProps> = ({ column }) => {
     return null;
   }
 
+  useEffect(() => {
+    setState({
+      value: column.getFilterValue(),
+    });
+  }, []);
+
   const open = () =>
     setState({
       value: column.getFilterValue(),
@@ -20,7 +26,12 @@ export const ColumnFilter: React.FC<ColumnButtonProps> = ({ column }) => {
   const close = () => setState(null);
 
   // eslint-disable-next-line
-  const change = (value: any) => setState({ value });
+  const change = (value: any) => {
+    setState({ value });
+    column.setFilterValue(value);
+  }
+    
+
 
   const clear = () => {
     column.setFilterValue(undefined);
@@ -35,23 +46,25 @@ export const ColumnFilter: React.FC<ColumnButtonProps> = ({ column }) => {
 
   const renderFilterElement = () => {
     // eslint-disable-next-line
-    const FilterComponent = (column.columnDef?.meta as any)?.filterElement;
+    const filterElement = (column.columnDef?.meta as any)?.filterElement;
+    const FilterComponent = filterElement?.component;
+    const filterMeta = filterElement?.meta ?? {};
 
-    if (!FilterComponent && !!state) {
-      return (
-        <TextInput
-          autoComplete="off"
-          value={state.value}
-          onChange={(e) => change(e.target.value)}
-        />
-      );
+    if (!FilterComponent ) {
+      return <TextInput autoComplete="off" value={state?.value} onChange={(e) => change(e.target.value)} />;
     }
 
-    return <FilterComponent value={state?.value} onChange={change} />;
+    return <FilterComponent column={column} value={state?.value} onChange={change} {...filterMeta} />;
   };
 
   return (
-    <Menu
+    <>
+      
+        
+          {renderFilterElement()}
+    
+
+      {/*<Menu
       opened={!!state}
       position="bottom"
       withArrow
@@ -96,6 +109,7 @@ export const ColumnFilter: React.FC<ColumnButtonProps> = ({ column }) => {
           </Stack>
         )}
       </Menu.Dropdown>
-    </Menu>
+    </Menu> */}
+    </>
   );
 };

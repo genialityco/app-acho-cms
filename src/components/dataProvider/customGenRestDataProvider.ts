@@ -23,7 +23,7 @@ export const customGenRestDataProvider: DataProvider = {
     let newResponse = {...response};
     if (response.data?.data?.items){
       newResponse.data = response.data?.data?.items;
-      newResponse.total  = response.data?.data?.totalItems;//response.data?.data?.items.length;
+      newResponse.total  = response.data?.data?.totalItems;
 
       console.log('response',response)
     }
