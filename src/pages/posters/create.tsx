@@ -33,6 +33,7 @@ export const PosterCreate: React.FC = () => {
       institution: "MIT",
       urlPdf: "",
       authors: [],
+      eventId:"66f1e0b57c2e2fbdefa21271"
     },
     transformValues: (values) => {
       return values;
