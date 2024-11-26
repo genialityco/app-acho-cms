@@ -1,4 +1,5 @@
 import type { Column } from "@tanstack/react-table";
+import { BaseRecord } from "@refinedev/core";
 
 export interface ICategory {
   _id: string;
@@ -22,12 +23,12 @@ export interface IPoster {
   topic: string;
   institution: string;
   urlPdf: string;
-  authors: Array;//.,status: "published" | "draft" | "rejected";
+  authors: Array; //.,status: "published" | "draft" | "rejected";
 }
 
 authors: [];
 
-export interface IEvent {
+export interface IEvent extends BaseRecord {
   _id: string;
   name: string;
   description: string;
@@ -45,8 +46,7 @@ export interface IAgenda {
   organizationId: Number;
   //status: "published" | "draft" | "rejected";
   category: { id: number };
-  
-  
+
   valory: string;
 }
 
@@ -56,10 +56,9 @@ export interface ISpeaker {
   description: string;
   location: string;
   eventId: { _id: number };
-  imageUrl:string;
+  imageUrl: string;
   isInternational: boolean;
 }
-
 
 /* 
         "location": {
