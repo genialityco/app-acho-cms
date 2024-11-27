@@ -84,6 +84,19 @@ export interface IMember {
   };
 }
 
+export interface INotificationTemplate {
+  _id: string;
+  organizationId: string;
+  title: string;
+  body: string;
+  data: Record<string, any>;
+  isSent: boolean;
+  totalSent: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+
 /* 
         "location": {
           "coordinates": {

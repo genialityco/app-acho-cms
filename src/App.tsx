@@ -50,12 +50,14 @@ import {
   ModuleList,
   ModuleShow,
 } from "./pages/modules";
-import {
-  NewsCreate,
-  NewsEdit,
-  NewsList
-} from "./pages/news"
+import { NewsCreate, NewsEdit, NewsList } from "./pages/news";
 import { MemberList } from "./pages/member/list";
+import {
+  NotificationTemplateCreate,
+  NotificationTemplateEdit,
+  NotificationTemplateList,
+} from "./pages/notifications";
+import { CertificatesList } from "./pages/certificates/list";
 
 // Mock de credenciales de autenticación
 const authCredentials = {
@@ -159,18 +161,32 @@ const App: React.FC = () => {
               },
               {
                 name: "news",
-                list:"/news",
+                list: "/news",
                 show: "/news/show/:id",
                 edit: "/news/edit/:id",
-                create: "/news/create"
+                create: "/news/create",
               },
               {
                 name: "members",
-                list:"/members",
+                list: "/members",
                 show: "/members/show/:id",
                 edit: "/members/edit/:id",
-                create: "/members/create"
-              }
+                create: "/members/create",
+              },
+              {
+                name: "notification-templates",
+                list: "/notification-templates",
+                show: "/notification-templates/show/:id",
+                edit: "/notification-templates/edit/:id",
+                create: "/notification-templates/create",
+                meta: {
+                  label: "Notifications",
+                },
+              },
+              {
+                name: "certificates",
+                list: "/certicates",
+              },
             ]}
             options={{
               syncWithLocation: true,
@@ -245,6 +261,24 @@ const App: React.FC = () => {
                   <Route index element={<MemberList />} />
                   {/* <Route path="create" element={<NewsCreate />} />
                   <Route path="edit/:id" element={<NewsEdit />} /> */}
+                  {/* <Route path="show/:id" element={<ModuleShow />} /> */}
+                </Route>
+                <Route path="/notification-templates">
+                  <Route index element={<NotificationTemplateList />} />
+                  <Route
+                    path="create"
+                    element={<NotificationTemplateCreate />}
+                  />
+                  <Route
+                    path="edit/:id"
+                    element={<NotificationTemplateEdit />}
+                  />
+                  {/* <Route path="show/:id" element={<ModuleShow />} /> */}
+                </Route>
+                <Route path="/certificates">
+                  <Route index element={<CertificatesList />} />
+                  {/* <Route path="create" element={<NotificationTemplateCreate />} />
+                  <Route path="edit/:id" element={<NotificationTemplateEdit />} />  */}
                   {/* <Route path="show/:id" element={<ModuleShow />} /> */}
                 </Route>
               </Route>
