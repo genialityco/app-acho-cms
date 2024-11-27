@@ -1,167 +1,129 @@
-import { type AuthProvider, Authenticated, GitHubBanner, Refine } from "@refinedev/core";
-import { AuthPage, ThemedLayoutV2, ErrorComponent, useNotificationProvider, RefineThemes } from "@refinedev/mantine";
+import React from "react";
+import {
+  type AuthProvider,
+  Authenticated,
+  OnErrorResponse,
+  Refine,
+} from "@refinedev/core";
+import {
+  AuthPage,
+  ThemedLayoutV2,
+  ErrorComponent,
+  useNotificationProvider,
+} from "@refinedev/mantine";
+import { MantineProvider, Global, Group, Image, Text } from "@mantine/core";
 import { NotificationsProvider } from "@mantine/notifications";
-import { MantineProvider, Global } from "@mantine/core";
-import { customGenRestDataProvider } from "./components/dataProvider/customGenRestDataProvider";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import routerProvider, {
   NavigateToResource,
   CatchAllNavigate,
   UnsavedChangesNotifier,
   DocumentTitleHandler,
 } from "@refinedev/react-router-v6";
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { IconBrandGoogle, IconBrandGithub } from "@tabler/icons-react";
 
-import { EventCreate, EventEdit, EventList, EventShow } from "./pages";
-import { AgendaCreate, AgendaEdit, AgendaList, AgendaShow } from "./pages";
-import { PosterCreate, PosterEdit, PosterList, PosterShow } from "./pages";
-import { SpeakerCreate, SpeakerEdit, SpeakerList, SpeakerShow } from "./pages";
-import { ModuleCreate, ModuleEdit, ModuleList, ModuleShow } from "./pages";
+import { customGenRestDataProvider } from "./components/dataProvider/customGenRestDataProvider";
 
-/**
- *  mock auth credentials to simulate authentication
- */
+// Importa páginas
+import { EventCreate, EventEdit, EventList, EventShow } from "./pages/events";
+import {
+  AgendaCreate,
+  AgendaEdit,
+  AgendaList,
+  AgendaShow,
+} from "./pages/agendas";
+import {
+  PosterCreate,
+  PosterEdit,
+  PosterList,
+  PosterShow,
+} from "./pages/posters";
+import {
+  SpeakerCreate,
+  SpeakerEdit,
+  SpeakerList,
+  SpeakerShow,
+} from "./pages/speakers";
+import {
+  ModuleCreate,
+  ModuleEdit,
+  ModuleList,
+  ModuleShow,
+} from "./pages/modules";
+import { NewsCreate, NewsEdit, NewsList } from "./pages/news";
+import { MemberList } from "./pages/member/list";
+import {
+  NotificationTemplateCreate,
+  NotificationTemplateEdit,
+  NotificationTemplateList,
+} from "./pages/notifications";
+import { CertificatesList } from "./pages/certificates/list";
+
+// Mock de credenciales de autenticación
 const authCredentials = {
   email: "recertificacion@acho.com.co",
   password: "123456",
 };
 
-const App: React.FC = () => {
-  const authProvider: AuthProvider = {
-    login: async ({ providerName, email }) => {
-      if (providerName === "google") {
-        window.location.href = "https://accounts.google.com/o/oauth2/v2/auth";
-        return {
-          success: true,
-        };
-      }
+// Proveedor de autenticación
+const authProvider: AuthProvider = {
+  login: async ({ providerName, email }) => {
+    if (providerName === "google") {
+      window.location.href = "https://accounts.google.com/o/oauth2/v2/auth";
+      return { success: true };
+    }
 
-      if (providerName === "github") {
-        window.location.href = "https://github.com/login/oauth/authorize";
-        return {
-          success: true,
-        };
-      }
+    if (providerName === "github") {
+      window.location.href = "https://github.com/login/oauth/authorize";
+      return { success: true };
+    }
 
-      if (email === authCredentials.email) {
-        localStorage.setItem("email", email);
-        return {
-          success: true,
-          redirectTo: "/",
-        };
-      }
+    if (email === authCredentials.email) {
+      localStorage.setItem("email", email);
+      return { success: true, redirectTo: "/" };
+    }
 
-      return {
-        success: false,
-        error: {
-          message: "Login failed",
-          name: "Invalid email or password",
-        },
-      };
-    },
-    register: async (params) => {
-      if (params.email === authCredentials.email && params.password) {
-        localStorage.setItem("email", params.email);
-        return {
-          success: true,
-          redirectTo: "/",
-        };
-      }
-      return {
-        success: false,
-        error: {
-          message: "Register failed",
-          name: "Invalid email or password",
-        },
-      };
-    },
-    updatePassword: async (params) => {
-      if (params.password === authCredentials.password) {
-        //we can update password here
-        return {
-          success: true,
-        };
-      }
-      return {
-        success: false,
-        error: {
-          message: "Update password failed",
-          name: "Invalid password",
-        },
-      };
-    },
-    forgotPassword: async (params) => {
-      if (params.email === authCredentials.email) {
-        //we can send email with reset password link here
-        return {
-          success: true,
-        };
-      }
-      return {
-        success: false,
-        error: {
-          message: "Forgot password failed",
-          name: "Invalid email",
-        },
-      };
-    },
-    logout: async () => {
-      localStorage.removeItem("email");
-      return {
-        success: true,
-        redirectTo: "/login",
-      };
-    },
-    onError: async (error) => {
-      if (error.response?.status === 401) {
-        return {
+    return {
+      success: false,
+      error: { message: "Login failed", name: "Invalid email or password" },
+    };
+  },
+  logout: async () => {
+    localStorage.removeItem("email");
+    return { success: true, redirectTo: "/login" };
+  },
+  check: async () =>
+    localStorage.getItem("email")
+      ? { authenticated: true }
+      : {
+          authenticated: false,
+          error: { message: "Check failed", name: "Not authenticated" },
           logout: true,
-        };
-      }
+          redirectTo: "/login",
+        },
+  getPermissions: async () => ["admin"],
+  getIdentity: async () => ({
+    id: 1,
+    name: "Admin",
+    avatar: "https://unsplash.com/photos/IWLOvomUmWU/download?force=true&w=640",
+  }),
+  onError: function (error: any): Promise<OnErrorResponse> {
+    throw new Error("Function not implemented.");
+  },
+};
 
-      return { error };
-    },
-    check: async () =>
-      localStorage.getItem("email")
-        ? {
-            authenticated: true,
-          }
-        : {
-            authenticated: false,
-            error: {
-              message: "Check failed",
-              name: "Not authenticated",
-            },
-            logout: true,
-            redirectTo: "/login",
-          },
-    getPermissions: async () => ["admin"],
-    getIdentity: async () => ({
-      id: 1,
-      name: "Jane Doe",
-      avatar: "https://unsplash.com/photos/IWLOvomUmWU/download?force=true&w=640",
-    }),
-  };
-
+const App: React.FC = () => {
   return (
     <BrowserRouter>
-      <MantineProvider theme={RefineThemes.Blue} withNormalizeCSS withGlobalStyles>
+      <MantineProvider withNormalizeCSS withGlobalStyles>
         <Global styles={{ body: { WebkitFontSmoothing: "auto" } }} />
         <NotificationsProvider position="top-right">
           <Refine
             dataProvider={customGenRestDataProvider}
-            // {dataProvider("https://api.fake-rest.refine.dev")}
             authProvider={authProvider}
             routerProvider={routerProvider}
             notificationProvider={useNotificationProvider}
             resources={[
-              {
-                name: "posts",
-                list: "/posts/listar",
-                show: "/posts/show/:id",
-                edit: "/posts/edit/:id",
-                create: "/posts/create",
-              },
               {
                 name: "events",
                 list: "/events",
@@ -170,7 +132,6 @@ const App: React.FC = () => {
                 create: "/events/create",
               },
               {
-                //agendas/search?eventId=66f1e0b57c2e2fbdefa21271
                 name: "agendas",
                 list: "/agendas",
                 show: "/agendas/show/:id",
@@ -178,7 +139,6 @@ const App: React.FC = () => {
                 create: "/agendas/create",
               },
               {
-                //agendas/search?eventId=66f1e0b57c2e2fbdefa21271
                 name: "posters",
                 list: "/posters",
                 show: "/posters/show/:id",
@@ -186,7 +146,6 @@ const App: React.FC = () => {
                 create: "/posters/create",
               },
               {
-                //agendas/search?eventId=66f1e0b57c2e2fbdefa21271
                 name: "speakers",
                 list: "/speakers",
                 show: "/speakers/show/:id",
@@ -195,34 +154,76 @@ const App: React.FC = () => {
                 meta: { label: "CMS" }
               },
               {
-                //agendas/search?eventId=66f1e0b57c2e2fbdefa21271
                 name: "modules",
                 list: "/modules",
                 show: "/modules/show/:id",
                 edit: "/modules/edit/:id",
                 create: "/modules/create",
               },
+              {
+                name: "news",
+                list: "/news",
+                show: "/news/show/:id",
+                edit: "/news/edit/:id",
+                create: "/news/create",
+              },
+              {
+                name: "members",
+                list: "/members",
+                show: "/members/show/:id",
+                edit: "/members/edit/:id",
+                create: "/members/create",
+              },
+              {
+                name: "notification-templates",
+                list: "/notification-templates",
+                show: "/notification-templates/show/:id",
+                edit: "/notification-templates/edit/:id",
+                create: "/notification-templates/create",
+                meta: {
+                  label: "Notifications",
+                },
+              },
+              {
+                name: "certificates",
+                list: "/certicates",
+              },
             ]}
             options={{
               syncWithLocation: true,
               warnWhenUnsavedChanges: true,
+              title: {
+                icon: (
+                  <Image src="/icons/LOGOSIMBOLO_ASOCIACION.png" width={40} />
+                ),
+                text: (
+                  <Text weight={700} size="xl">
+                    ACHO
+                  </Text>
+                ),
+              },
             }}
           >
             <Routes>
+              {/* Rutas autenticadas */}
               <Route
                 element={
-                  <Authenticated key="authenticated-routes" fallback={<CatchAllNavigate to="/login" />}>
+                  <Authenticated
+                    key="dashboard"
+                    fallback={<CatchAllNavigate to="/login" />}
+                  >
                     <ThemedLayoutV2>
                       <Outlet />
                     </ThemedLayoutV2>
                   </Authenticated>
                 }
               >
-                <Route index element={<NavigateToResource resource="posters" />} />
-
+                <Route
+                  index
+                  element={<NavigateToResource resource="events" />}
+                />
                 <Route path="/events">
                   <Route index element={<EventList />} />
-                  <Route path="listar" index element={<EventList />} />
                   <Route path="create" element={<EventCreate />} />
                   <Route path="edit/:id" element={<EventEdit />} />
                   <Route path="show/:id" element={<EventShow />} />
@@ -250,13 +251,44 @@ const App: React.FC = () => {
                   <Route path="create" element={<ModuleCreate />} />
                   <Route path="edit/:id" element={<ModuleEdit />} />
                   <Route path="show/:id" element={<ModuleShow />} />
-                </Route>                
+                </Route>
+                <Route path="/news">
+                  <Route index element={<NewsList />} />
+                  <Route path="create" element={<NewsCreate />} />
+                  <Route path="edit/:id" element={<NewsEdit />} />
+                  {/* <Route path="show/:id" element={<ModuleShow />} /> */}
+                </Route>
+                <Route path="/members">
+                  <Route index element={<MemberList />} />
+                  {/* <Route path="create" element={<NewsCreate />} />
+                  <Route path="edit/:id" element={<NewsEdit />} /> */}
+                  {/* <Route path="show/:id" element={<ModuleShow />} /> */}
+                </Route>
+                <Route path="/notification-templates">
+                  <Route index element={<NotificationTemplateList />} />
+                  <Route
+                    path="create"
+                    element={<NotificationTemplateCreate />}
+                  />
+                  <Route
+                    path="edit/:id"
+                    element={<NotificationTemplateEdit />}
+                  />
+                  {/* <Route path="show/:id" element={<ModuleShow />} /> */}
+                </Route>
+                <Route path="/certificates">
+                  <Route index element={<CertificatesList />} />
+                  {/* <Route path="create" element={<NotificationTemplateCreate />} />
+                  <Route path="edit/:id" element={<NotificationTemplateEdit />} />  */}
+                  {/* <Route path="show/:id" element={<ModuleShow />} /> */}
+                </Route>
               </Route>
 
+              {/* Rutas públicas */}
               <Route
                 element={
-                  <Authenticated key="auth-pages" fallback={<Outlet />}>
-                    <NavigateToResource resource="posts" />
+                  <Authenticated key="public" fallback={<Outlet />}>
+                    <NavigateToResource resource="events" />
                   </Authenticated>
                 }
               >
@@ -265,50 +297,13 @@ const App: React.FC = () => {
                   element={
                     <AuthPage
                       type="login"
-                      formProps={{
-                        initialValues: {
-                          ...authCredentials,
-                        },
-                      }}
-                      providers={[
-                        {
-                          name: "google",
-                          label: "Sign in with Google",
-                          icon: <IconBrandGoogle />,
-                        },
-                        {
-                          name: "github",
-                          label: "Sign in with GitHub",
-                          icon: <IconBrandGithub />,
-                        },
-                      ]}
+                      formProps={{ initialValues: { ...authCredentials } }}
                     />
                   }
                 />
-                <Route
-                  path="/register"
-                  element={
-                    <AuthPage
-                      type="register"
-                      providers={[
-                        {
-                          name: "google",
-                          label: "Sign in with Google",
-                          icon: <IconBrandGoogle />,
-                        },
-                        {
-                          name: "github",
-                          label: "Sign in with GitHub",
-                          icon: <IconBrandGithub />,
-                        },
-                      ]}
-                    />
-                  }
-                />
-                <Route path="/forgot-password" element={<AuthPage type="forgotPassword" />} />
-                <Route path="/update-password" element={<AuthPage type="updatePassword" />} />
               </Route>
 
+              {/* Catch-All */}
               <Route
                 element={
                   <Authenticated key="catch-all">

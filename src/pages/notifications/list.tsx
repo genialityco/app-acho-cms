@@ -6,40 +6,51 @@ import {
   HeaderGroup,
   RowModel,
 } from "@tanstack/react-table";
+import { List, ShowButton, EditButton, DeleteButton } from "@refinedev/mantine";
 import {
-  List,
-  ShowButton,
-  EditButton,
-  DeleteButton,
-  DateField,
-} from "@refinedev/mantine";
-import { Box, Group, ScrollArea, Table, Pagination } from "@mantine/core";
+  Box,
+  Group,
+  ScrollArea,
+  Table,
+  Pagination,
+  ActionIcon,
+} from "@mantine/core";
 import { ColumnFilter, ColumnSorter } from "../../components/table";
-import type { IEvent } from "../../interfaces";
+import type { INotificationTemplate } from "../../interfaces";
+import { useNotification, useUpdate } from "@refinedev/core";
+import { IconSend } from "@tabler/icons-react";
 
-export const EventList: React.FC = () => {
+export const NotificationTemplateList: React.FC = () => {
   // Definición de columnas
-  const columns = React.useMemo<ColumnDef<IEvent>[]>(
+  const columns = React.useMemo<ColumnDef<INotificationTemplate>[]>(
     () => [
       {
-        id: "_id",
-        header: "ID",
-        accessorKey: "_id",
-      },
-      {
-        id: "name",
-        header: "Name",
-        accessorKey: "name",
+        id: "title",
+        header: "Title",
+        accessorKey: "title",
         meta: {
           filterOperator: "contains",
         },
       },
       {
-        id: "startDate",
-        header: "Start Date",
-        accessorKey: "startDate",
+        id: "isSent",
+        header: "Sent",
+        accessorKey: "isSent",
+        cell: ({ getValue }) => (getValue() ? "Yes" : "No"),
+        enableColumnFilter: false,
+      },
+      {
+        id: "totalSent",
+        header: "Total Sent",
+        accessorKey: "totalSent",
+        enableColumnFilter: false,
+      },
+      {
+        id: "createdAt",
+        header: "Created At",
+        accessorKey: "createdAt",
         cell: ({ getValue }) => (
-          <DateField value={getValue() as string} format="LLL" />
+          <span>{new Date(getValue() as string).toLocaleString()}</span>
         ),
         enableColumnFilter: false,
       },
@@ -50,7 +61,7 @@ export const EventList: React.FC = () => {
         enableColumnFilter: false,
         enableSorting: false,
         cell: ({ getValue }) => (
-          <ActionButtons recordId={getValue() as string} />
+          <ActionButtons recordId={getValue() as string} isSent={false} />
         ),
       },
     ],
@@ -62,7 +73,7 @@ export const EventList: React.FC = () => {
     getHeaderGroups,
     getRowModel,
     refineCore: { setCurrent, pageCount, current },
-  } = useTable<IEvent>({ columns });
+  } = useTable<INotificationTemplate>({ columns });
 
   return (
     <ScrollArea>
@@ -84,11 +95,43 @@ export const EventList: React.FC = () => {
 };
 
 // Componente para los botones de acción
-const ActionButtons: React.FC<{ recordId: string }> = ({ recordId }) => {
+const ActionButtons: React.FC<{ recordId: string; isSent: boolean }> = ({
+  recordId,
+  isSent,
+}) => {
+  const { open } = useNotification();
+  const { mutate } = useUpdate();
+
+  const handleSendNotification = async () => {
+    try {
+      await mutate({
+        resource: "notifications/send-from-template",
+        id: recordId,
+        values: {}, // No es necesario enviar payload adicional
+      });
+
+      open?.({
+        type: "success",
+        message: "Notification sent successfully",
+      });
+    } catch (error) {
+      open?.({
+        type: "error",
+        message: "Error sending notification",
+        description: error.message,
+      });
+    }
+  };
+
   return (
     <Group spacing="xs" noWrap>
       <ShowButton hideText recordItemId={recordId} />
       <EditButton hideText recordItemId={recordId} />
+      {!isSent && (
+        <ActionIcon variant="default" onClick={handleSendNotification}>
+          <IconSend />
+        </ActionIcon>
+      )}
       <DeleteButton hideText recordItemId={recordId} />
     </Group>
   );
@@ -96,7 +139,7 @@ const ActionButtons: React.FC<{ recordId: string }> = ({ recordId }) => {
 
 // Componente para el encabezado de la tabla
 const TableHeader: React.FC<{
-  getHeaderGroups: () => HeaderGroup<IEvent>[];
+  getHeaderGroups: () => HeaderGroup<INotificationTemplate>[];
 }> = ({ getHeaderGroups }) => (
   <thead>
     {getHeaderGroups().map((headerGroup) => (
@@ -125,9 +168,9 @@ const TableHeader: React.FC<{
 );
 
 // Componente para el cuerpo de la tabla
-const TableBody: React.FC<{ getRowModel: () => RowModel<IEvent> }> = ({
-  getRowModel,
-}) => (
+const TableBody: React.FC<{
+  getRowModel: () => RowModel<INotificationTemplate>;
+}> = ({ getRowModel }) => (
   <tbody>
     {getRowModel().rows.map((row) => (
       <tr key={row.id}>

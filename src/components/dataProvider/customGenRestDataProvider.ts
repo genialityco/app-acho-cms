@@ -1,93 +1,146 @@
-// customDataProvider.js
 import { DataProvider } from "@refinedev/core";
 import dataProvider from "@refinedev/simple-rest";
 
-import axios from "axios";
+// const API_URL = "http://172.31.80.1:3000";
+const API_URL = "https://lobster-app-uy9hx.ondigitalocean.app"
 
-const API_URL = "https://lobster-app-uy9hx.ondigitalocean.app"; // Your API base URL
-//const API_URL = 'https://api.fake-rest.refine.dev'; // Your API base URL
-
-// Initialize the simple-rest dataProvider
+// Inicializa el dataProvider original de simple-rest
 const restProvider = dataProvider(API_URL);
 
-// Custom wrapper around simple-rest dataProvider
-//Gen.api devuelve los datos en el formato [[data:item] o [data:{items:[items]}]
-//lo convertimos en una respuesta JSON API standar
+// Custom Data Provider
 export const customGenRestDataProvider: DataProvider = {
-  // // Customizing getList behavior
   ...restProvider,
-  getList: async (params) => {
-    // Call the original simple-rest provider's getList method
-    const response = await restProvider.getList(params);
 
-    let newResponse = {...response};
-    if (response.data?.data?.items){
-      newResponse.data = response.data?.data?.items;
-      newResponse.total  = response.data?.data?.totalItems;
+  /**
+   * Personalización de getList
+   * Convierte la respuesta en formato estándar JSON API.
+   */
+  getList: async ({ resource, pagination, filters, sorters }) => {
+    try {
+      const { current = 1, pageSize = 10 } = pagination ?? {};
+      const query: Record<string, any> = {
+        page: current,
+        limit: pageSize,
+      };
 
-      console.log('response',response)
+      // Aplica filtros (si los hay)
+      if (filters) {
+        filters.forEach((filter) => {
+          query[filter.field] = filter.value;
+        });
+      }
+
+      // Aplica ordenamiento (si lo hay)
+      if (sorters) {
+        const sorterQuery = sorters.map(
+          (sort) => `${sort.field}:${sort.order}`
+        );
+        query.sort = sorterQuery.join(",");
+      }
+
+      // Realiza la solicitud al backend
+      const url = new URL(`${API_URL}/${resource}`);
+      Object.keys(query).forEach((key) =>
+        url.searchParams.append(key, query[key])
+      );
+
+      const response = await fetch(url.toString());
+      const data = await response.json();
+      console.log(data);
+
+      // Retorna los datos y el total de ítems
+      return {
+        data: data.data.items || [],
+        total: data.data.totalItems || 0,
+      };
+    } catch (error) {
+      console.error("Error en getList:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Personalización de getOne
+   * Adapta la respuesta para devolver el dato directamente desde el campo `data`.
+   */
+  getOne: async (params) => {
+    try {
+      const response = await restProvider.getOne(params);
+
+      let transformedData = response.data?.data
+        ? response.data?.data
+        : response.data;
+
+      console.log("Custom getOne called:", transformedData, response, params);
+
+      return {
+        ...response,
+        data: transformedData,
+      };
+    } catch (error) {
+      console.error("Error en getOne:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Personalización de create
+   * Modifica o extiende el comportamiento de la creación.
+   */
+  create: async (params) => {
+    try {
+      const response = await restProvider.create(params);
+
+      return {
+        ...response,
+        data: response.data?.data || response.data,
+      };
+    } catch (error) {
+      console.error("Error en create:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Personalización de update
+   * Modifica o extiende el comportamiento de la actualización.
+   */
+  update: async ({ resource, id, variables }) => {
+    if (resource === "notifications/send-from-template") {
+      const response = await fetch(
+        `${API_URL}/notifications/send-from-template/${id}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to send notification: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      return { data };
     }
 
-    return newResponse;
+    return restProvider.update({ resource, id, variables });
   },
 
-  // Customizing getOne behavior
-  getOne: async (params) => {
-      
-      // Call the original simple-rest provider's getOne method
-      const response = await restProvider.getOne(params);
-      let transformedData = response.data?.data ?  response.data?.data : response.data;
-      console.log('Custom getOne called:', transformedData, response,params);
-      return {
-          ...response,
-          data: transformedData, // Return modified data
-      };
+  /**
+   * Personalización de deleteOne
+   * Modifica el comportamiento de eliminación.
+   */
+  deleteOne: async (params) => {
+    try {
+      const response = await restProvider.deleteOne(params);
+
+      console.log("Custom deleteOne called:", response);
+
+      return response;
+    } catch (error) {
+      console.error("Error en deleteOne:", error);
+      throw error;
+    }
   },
-
-  // // Customizing create behavior
-  // create: async (params) => {
-  //     console.log('Custom create called:', params);
-
-  //     // Call the original simple-rest provider's create method
-  //     const response = await restProvider.create(params);
-
-  //     // Optionally modify the created data before returning
-  //     return {
-  //         ...response,
-  //         data: {
-  //             ...response.data,
-  //             createdAt: new Date().toISOString(), // Add a custom field after creation
-  //         },
-  //     };
-  // },
-
-  // // Customizing update behavior
-  // update: async (params) => {
-  //     console.log('Custom update called:', params);
-
-  //     // Call the original simple-rest provider's update method
-  //     const response = await restProvider.update(params);
-
-  //     // Optionally modify the updated data before returning
-  //     return {
-  //         ...response,
-  //         data: {
-  //             ...response.data,
-  //             updatedField: 'Updated successfully', // Add a custom field after updating
-  //         },
-  //     };
-  // },
-
-  // // Customizing delete behavior
-  // deleteOne: async (params) => {
-  //     console.log('Custom delete called:', params);
-
-  //     // Call the original simple-rest provider's deleteOne method
-  //     const response = await restProvider.deleteOne(params);
-
-  //     // Optionally handle custom logic on deletion
-  //     return response; // Return as-is or add custom modifications
-  // },
-
-  // Forward other dataProvider methods to the original provider
 };
