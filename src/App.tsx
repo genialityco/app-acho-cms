@@ -150,7 +150,6 @@ const App: React.FC = () => {
                 show: "/speakers/show/:id",
                 edit: "/speakers/edit/:id",
                 create: "/speakers/create",
-                meta: { label: "CMS" }
               },
               {
                 name: "modules",
