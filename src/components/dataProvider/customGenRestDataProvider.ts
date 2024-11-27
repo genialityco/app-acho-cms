@@ -50,8 +50,8 @@ export const customGenRestDataProvider: DataProvider = {
 
       // Retorna los datos y el total de ítems
       return {
-        data: data.data.items || [],
-        total: data.data.totalItems || 0,
+        data: data.data?.items || [],
+        total: data.data?.totalItems || 0,
       };
     } catch (error) {
       console.error("Error en getList:", error);

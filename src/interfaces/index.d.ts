@@ -96,6 +96,19 @@ export interface INotificationTemplate {
   updatedAt: string;
 }
 
+export interface IHighlight {
+  _id?: string;
+  name: string;
+  organizationId: string;
+  eventId: string;
+  description: string;
+  imageUrl: string;
+  vimeoUrl: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+
 
 /* 
         "location": {

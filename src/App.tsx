@@ -57,6 +57,8 @@ import {
   NotificationTemplateList,
 } from "./pages/notifications";
 import { CertificatesList } from "./pages/certificates/list";
+import { HighlightList } from "./pages/highlights/list";
+import { HighlightCreate } from "./pages/highlights";
 
 // Mock de credenciales de autenticación
 const authCredentials = {
@@ -186,6 +188,11 @@ const App: React.FC = () => {
                 name: "certificates",
                 list: "/certificates",
               },
+              {
+                name: "highlights",
+                list: "/highlights",
+                create: "/highlights/create",
+              }
             ]}
             options={{
               syncWithLocation: true,
@@ -278,6 +285,12 @@ const App: React.FC = () => {
                   <Route index element={<CertificatesList />} />
                   {/* <Route path="create" element={<NotificationTemplateCreate />} />
                   <Route path="edit/:id" element={<NotificationTemplateEdit />} />  */}
+                  {/* <Route path="show/:id" element={<ModuleShow />} /> */}
+                </Route>
+                <Route path="/highlights">
+                  <Route index element={<HighlightList />} />
+                  <Route path="create" element={<HighlightCreate />} />
+                  {/* <Route path="edit/:id" element={<NotificationTemplateEdit />} />  */}
                   {/* <Route path="show/:id" element={<ModuleShow />} /> */}
                 </Route>
               </Route>
