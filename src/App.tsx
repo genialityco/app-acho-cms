@@ -184,7 +184,7 @@ const App: React.FC = () => {
               },
               {
                 name: "certificates",
-                list: "/certicates",
+                list: "/certificates",
               },
             ]}
             options={{
