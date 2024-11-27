@@ -176,7 +176,7 @@ export const PosterList: React.FC = () => {
     <>
     {console.log('tableData',tableData)}
     </>
-      <List title={"Postersxx" + " Total:" + tableData?.total}>
+      <List title={"Posters" + " Total:" + tableData?.total}>
         <Pagination position="left" total={pageCount} value={current} onChange={setCurrent} />
         <Table highlightOnHover style={{ width: "100%", tableLayout: "auto" }}>
           <thead>
