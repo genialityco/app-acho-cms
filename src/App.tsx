@@ -50,6 +50,12 @@ import {
   ModuleList,
   ModuleShow,
 } from "./pages/modules";
+import {
+  NewsCreate,
+  NewsEdit,
+  NewsList
+} from "./pages/news"
+import { MemberList } from "./pages/member/list";
 
 // Mock de credenciales de autenticación
 const authCredentials = {
@@ -151,6 +157,20 @@ const App: React.FC = () => {
                 edit: "/modules/edit/:id",
                 create: "/modules/create",
               },
+              {
+                name: "news",
+                list:"/news",
+                show: "/news/show/:id",
+                edit: "/news/edit/:id",
+                create: "/news/create"
+              },
+              {
+                name: "members",
+                list:"/members",
+                show: "/members/show/:id",
+                edit: "/members/edit/:id",
+                create: "/members/create"
+              }
             ]}
             options={{
               syncWithLocation: true,
@@ -214,6 +234,18 @@ const App: React.FC = () => {
                   <Route path="create" element={<ModuleCreate />} />
                   <Route path="edit/:id" element={<ModuleEdit />} />
                   <Route path="show/:id" element={<ModuleShow />} />
+                </Route>
+                <Route path="/news">
+                  <Route index element={<NewsList />} />
+                  <Route path="create" element={<NewsCreate />} />
+                  <Route path="edit/:id" element={<NewsEdit />} />
+                  {/* <Route path="show/:id" element={<ModuleShow />} /> */}
+                </Route>
+                <Route path="/members">
+                  <Route index element={<MemberList />} />
+                  {/* <Route path="create" element={<NewsCreate />} />
+                  <Route path="edit/:id" element={<NewsEdit />} /> */}
+                  {/* <Route path="show/:id" element={<ModuleShow />} /> */}
                 </Route>
               </Route>
 

@@ -13,40 +13,50 @@ import {
   DeleteButton,
   DateField,
 } from "@refinedev/mantine";
-import { Box, Group, ScrollArea, Table, Pagination } from "@mantine/core";
+import {
+  Box,
+  Group,
+  ScrollArea,
+  Table,
+  Pagination,
+  Image,
+  Text,
+} from "@mantine/core";
 import { ColumnFilter, ColumnSorter } from "../../components/table";
-import type { IEvent } from "../../interfaces";
+import type { INews } from "../../interfaces";
 
-export const EventList: React.FC = () => {
+export const NewsList: React.FC = () => {
   // Definición de columnas
-  const columns = React.useMemo<ColumnDef<IEvent>[]>(
+  const columns = React.useMemo<ColumnDef<INews>[]>(
     () => [
       {
-        id: "_id",
-        header: "ID",
-        accessorKey: "_id",
-      },
-      {
-        id: "name",
-        header: "Name",
-        accessorKey: "name",
+        id: "title",
+        header: "Title",
+        accessorKey: "title",
         meta: {
           filterOperator: "contains",
         },
       },
       {
-        id: "startDate",
-        header: "Start Date",
-        accessorKey: "startDate",
+        id: "featuredImage",
+        header: "Featured Image",
+        accessorKey: "featuredImage",
         cell: ({ getValue }) => (
-          <DateField value={getValue() as string} format="LLL" />
+          <Image
+            src={getValue() as string}
+            alt="Featured"
+            width={100}
+            height={60}
+            fit="contain"
+          />
         ),
         enableColumnFilter: false,
+        enableSorting: false,
       },
       {
         id: "actions",
         header: "Actions",
-        accessorKey: "_id",
+        accessorKey: "_id", 
         enableColumnFilter: false,
         enableSorting: false,
         cell: ({ getValue }) => (
@@ -62,7 +72,7 @@ export const EventList: React.FC = () => {
     getHeaderGroups,
     getRowModel,
     refineCore: { setCurrent, pageCount, current },
-  } = useTable<IEvent>({ columns });
+  } = useTable<INews>({ columns });
 
   return (
     <ScrollArea>
@@ -84,19 +94,17 @@ export const EventList: React.FC = () => {
 };
 
 // Componente para los botones de acción
-const ActionButtons: React.FC<{ recordId: string }> = ({ recordId }) => {
-  return (
-    <Group spacing="xs" noWrap>
-      <ShowButton hideText recordItemId={recordId} />
-      <EditButton hideText recordItemId={recordId} />
-      <DeleteButton hideText recordItemId={recordId} />
-    </Group>
-  );
-};
+const ActionButtons: React.FC<{ recordId: string }> = ({ recordId }) => (
+  <Group spacing="xs" noWrap>
+    <ShowButton hideText recordItemId={recordId} />
+    <EditButton hideText recordItemId={recordId} />
+    <DeleteButton hideText recordItemId={recordId} />
+  </Group>
+);
 
 // Componente para el encabezado de la tabla
 const TableHeader: React.FC<{
-  getHeaderGroups: () => HeaderGroup<IEvent>[];
+  getHeaderGroups: () => HeaderGroup<INews>[];
 }> = ({ getHeaderGroups }) => (
   <thead>
     {getHeaderGroups().map((headerGroup) => (
@@ -125,7 +133,7 @@ const TableHeader: React.FC<{
 );
 
 // Componente para el cuerpo de la tabla
-const TableBody: React.FC<{ getRowModel: () => RowModel<IEvent> }> = ({
+const TableBody: React.FC<{ getRowModel: () => RowModel<INews> }> = ({
   getRowModel,
 }) => (
   <tbody>

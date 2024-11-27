@@ -6,49 +6,44 @@ import {
   HeaderGroup,
   RowModel,
 } from "@tanstack/react-table";
-import {
-  List,
-  ShowButton,
-  EditButton,
-  DeleteButton,
-  DateField,
-} from "@refinedev/mantine";
+import { List, ShowButton, EditButton, DeleteButton } from "@refinedev/mantine";
 import { Box, Group, ScrollArea, Table, Pagination } from "@mantine/core";
 import { ColumnFilter, ColumnSorter } from "../../components/table";
-import type { IEvent } from "../../interfaces";
+import type { IMember } from "../../interfaces";
 
-export const EventList: React.FC = () => {
-  // Definición de columnas
-  const columns = React.useMemo<ColumnDef<IEvent>[]>(
+export const MemberList: React.FC = () => {
+  const columns = React.useMemo<ColumnDef<IMember>[]>(
     () => [
       {
-        id: "_id",
-        header: "ID",
-        accessorKey: "_id",
+        id: "properties.fullName",
+        header: "Full Name",
+        accessorKey: "properties.fullName",
       },
       {
-        id: "name",
-        header: "Name",
-        accessorKey: "name",
-        meta: {
-          filterOperator: "contains",
-        },
+        id: "properties.email",
+        header: "Email",
+        accessorKey: "properties.email",
       },
       {
-        id: "startDate",
-        header: "Start Date",
-        accessorKey: "startDate",
-        cell: ({ getValue }) => (
-          <DateField value={getValue() as string} format="LLL" />
-        ),
-        enableColumnFilter: false,
+        id: "properties.specialty",
+        header: "Specialty",
+        accessorKey: "properties.specialty",
+      },
+      {
+        id: "properties.phone",
+        header: "Phone",
+        accessorKey: "properties.phone",
+      },
+      {
+        id: "memberActive",
+        header: "Active Member",
+        accessorKey: "memberActive",
+        cell: ({ getValue }) => (getValue() ? "Yes" : "No"),
       },
       {
         id: "actions",
         header: "Actions",
         accessorKey: "_id",
-        enableColumnFilter: false,
-        enableSorting: false,
         cell: ({ getValue }) => (
           <ActionButtons recordId={getValue() as string} />
         ),
@@ -57,12 +52,16 @@ export const EventList: React.FC = () => {
     []
   );
 
-  // Configuración de la tabla
   const {
     getHeaderGroups,
     getRowModel,
-    refineCore: { setCurrent, pageCount, current },
-  } = useTable<IEvent>({ columns });
+    refineCore: { setCurrent, current, pageCount },
+  } = useTable<IMember>({
+    columns,
+    initialState: {
+      pagination: { pageSize: 10 }, // Asegúrate de que el tamaño sea razonable
+    },
+  });
 
   return (
     <ScrollArea>
@@ -73,8 +72,8 @@ export const EventList: React.FC = () => {
         </Table>
         <Pagination
           position="right"
-          total={pageCount}
-          value={current}
+          total={pageCount || 1}
+          value={current || 1}
           onChange={setCurrent}
           mt="md"
         />
@@ -84,19 +83,17 @@ export const EventList: React.FC = () => {
 };
 
 // Componente para los botones de acción
-const ActionButtons: React.FC<{ recordId: string }> = ({ recordId }) => {
-  return (
-    <Group spacing="xs" noWrap>
-      <ShowButton hideText recordItemId={recordId} />
-      <EditButton hideText recordItemId={recordId} />
-      <DeleteButton hideText recordItemId={recordId} />
-    </Group>
-  );
-};
+const ActionButtons: React.FC<{ recordId: string }> = ({ recordId }) => (
+  <Group spacing="xs" noWrap>
+    <ShowButton hideText recordItemId={recordId} />
+    <EditButton hideText recordItemId={recordId} />
+    <DeleteButton hideText recordItemId={recordId} />
+  </Group>
+);
 
 // Componente para el encabezado de la tabla
 const TableHeader: React.FC<{
-  getHeaderGroups: () => HeaderGroup<IEvent>[];
+  getHeaderGroups: () => HeaderGroup<IMember>[];
 }> = ({ getHeaderGroups }) => (
   <thead>
     {getHeaderGroups().map((headerGroup) => (
@@ -125,7 +122,7 @@ const TableHeader: React.FC<{
 );
 
 // Componente para el cuerpo de la tabla
-const TableBody: React.FC<{ getRowModel: () => RowModel<IEvent> }> = ({
+const TableBody: React.FC<{ getRowModel: () => RowModel<IMember> }> = ({
   getRowModel,
 }) => (
   <tbody>

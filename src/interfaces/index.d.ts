@@ -60,6 +60,30 @@ export interface ISpeaker {
   isInternational: boolean;
 }
 
+export interface INews {
+  _id: string;
+  title: string;
+  content: string;
+  organizationId: string;
+  featuredImage: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IMember {
+  _id: string;
+  userId: string;
+  organizationId: string;
+  memberActive: boolean;
+  properties: {
+    specialty: string;
+    idNumber: string;
+    email: string;
+    fullName: string;
+    phone: string;
+  };
+}
+
 /* 
         "location": {
           "coordinates": {
