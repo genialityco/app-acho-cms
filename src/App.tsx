@@ -22,8 +22,8 @@ import { ModuleCreate, ModuleEdit, ModuleList, ModuleShow } from "./pages";
  *  mock auth credentials to simulate authentication
  */
 const authCredentials = {
-  email: "demo@refine.dev",
-  password: "demodemo",
+  email: "recertificacion@acho.com.co",
+  password: "123456",
 };
 
 const App: React.FC = () => {
@@ -192,6 +192,7 @@ const App: React.FC = () => {
                 show: "/speakers/show/:id",
                 edit: "/speakers/edit/:id",
                 create: "/speakers/create",
+                meta: { label: "CMS" }
               },
               {
                 //agendas/search?eventId=66f1e0b57c2e2fbdefa21271
