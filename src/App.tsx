@@ -20,7 +20,6 @@ import routerProvider, {
   UnsavedChangesNotifier,
   DocumentTitleHandler,
 } from "@refinedev/react-router-v6";
-import { IconBrandGoogle, IconBrandGithub } from "@tabler/icons-react";
 
 import { customGenRestDataProvider } from "./components/dataProvider/customGenRestDataProvider";
 
@@ -294,9 +293,12 @@ const App: React.FC = () => {
               >
                 <Route
                   path="/login"
+                  
                   element={
                     <AuthPage
                       type="login"
+                      registerLink={false}
+                      forgotPasswordLink={false}
                       formProps={{ initialValues: { ...authCredentials } }}
                     />
                   }
