@@ -67,24 +67,24 @@ export const HighlightList: React.FC = () => {
   const {
     getHeaderGroups,
     getRowModel,
-    refineCore: { setCurrent, pageCount, current, data },
+    refineCore: { setCurrent, pageCount, current },
   } = useTable<IHighlight>({ columns });
 
   // Verificar si no hay datos
-  if (!data?.length) {
-    return (
-      <List>
-        <Center style={{ height: "80vh" }}>
-          <Stack align="center" spacing="lg">
-            <Text size="xl" weight={700}>
-              No hay highlights disponibles
-            </Text>
-            <CreateButton size="md">Crear Highlight</CreateButton>
-          </Stack>
-        </Center>
-      </List>
-    );
-  }
+  // if (!data?.length) {
+  //   return (
+  //     <List>
+  //       <Center style={{ height: "80vh" }}>
+  //         <Stack align="center" spacing="lg">
+  //           <Text size="xl" weight={700}>
+  //             No hay highlights disponibles
+  //           </Text>
+  //           <CreateButton size="md">Crear Highlight</CreateButton>
+  //         </Stack>
+  //       </Center>
+  //     </List>
+  //   );
+  // }
 
   return (
     <ScrollArea>

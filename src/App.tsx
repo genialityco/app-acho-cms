@@ -59,6 +59,8 @@ import {
 import { CertificatesList } from "./pages/certificates/list";
 import { HighlightList } from "./pages/highlights/list";
 import { HighlightCreate } from "./pages/highlights";
+import { HighlightEdit } from "./pages/highlights/edit";
+import { SurveyCreate, SurveyEdit, SurveyList } from "./pages/surveys";
 
 // Mock de credenciales de autenticación
 const authCredentials = {
@@ -192,6 +194,13 @@ const App: React.FC = () => {
                 name: "highlights",
                 list: "/highlights",
                 create: "/highlights/create",
+                edit:"/highlights/edit/:id"
+              },
+              {
+                name: "surveys",
+                list: "/surveys",
+                create: "/surveys/create",
+                edit: "/surveys/edit/:id"
               }
             ]}
             options={{
@@ -290,7 +299,13 @@ const App: React.FC = () => {
                 <Route path="/highlights">
                   <Route index element={<HighlightList />} />
                   <Route path="create" element={<HighlightCreate />} />
-                  {/* <Route path="edit/:id" element={<NotificationTemplateEdit />} />  */}
+                  <Route path="edit/:id" element={<HighlightEdit />} /> 
+                  {/* <Route path="show/:id" element={<ModuleShow />} /> */}
+                </Route>
+                <Route path="/surveys">
+                  <Route index element={<SurveyList />} />
+                  <Route path="create" element={<SurveyCreate />} />
+                  <Route path="edit/:id" element={<SurveyEdit />} /> 
                   {/* <Route path="show/:id" element={<ModuleShow />} /> */}
                 </Route>
               </Route>

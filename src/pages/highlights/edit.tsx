@@ -1,45 +1,58 @@
 import React, { useState } from "react";
-import { Create, useForm } from "@refinedev/mantine";
-import {
-  TextInput,
-  Textarea,
-  Box,
-  Button,
-  Group,
-  Text,
-} from "@mantine/core";
+import { Edit, useForm } from "@refinedev/mantine";
+import { TextInput, Textarea, Box, Button, Text, Group } from "@mantine/core";
 import { Dropzone, IMAGE_MIME_TYPE } from "@mantine/dropzone";
-import { IconUpload, IconPhoto } from "@tabler/icons-react";
+import { IconUpload, IconPhoto, IconX } from "@tabler/icons-react";
 import axios from "axios";
 
-export const HighlightCreate: React.FC = () => {
+export const HighlightEdit: React.FC = () => {
   const [loadingImage, setLoadingImage] = useState(false);
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
 
-  const { saveButtonProps, getInputProps, setFieldValue, errors } = useForm({
+  const {
+    saveButtonProps,
+    getInputProps,
+    setFieldValue,
+    refineCore: { queryResult },
+    errors,
+  } = useForm({
     initialValues: {
       name: "",
       description: "",
-      imageUrl: "",
       vimeoUrl: "",
-      organizationId: "66f1d236ee78a23c67fada2a",
-      eventId: "66f1e0b57c2e2fbdefa21271",
+      imageUrl: "",
+      organizationId: "",
+      eventId: "",
     },
     validate: {
       name: (value) => (value.length < 3 ? "Name is too short" : null),
-      description: (value) => (value.length < 5 ? "Description is too short" : null),
+      description: (value) => (value.length < 10 ? "Description is too short" : null),
       vimeoUrl: (value) => (!value.startsWith("https://") ? "Invalid URL" : null),
     },
   });
 
-  const handleFileUpload = async (files: File[]) => {
-    if (files.length === 0) {
+  const { data } = queryResult;
+
+  React.useEffect(() => {
+    if (data) {
+      const { name, description, vimeoUrl, imageUrl, organizationId, eventId } = data.data;
+      setFieldValue("name", name);
+      setFieldValue("description", description);
+      setFieldValue("vimeoUrl", vimeoUrl);
+      setFieldValue("imageUrl", imageUrl);
+      setFieldValue("organizationId", organizationId);
+      setFieldValue("eventId", eventId);
+    }
+  }, [data, setFieldValue]);
+
+  const handleImageUpload = async () => {
+    if (imageFiles.length === 0) {
       alert("No files selected!");
       return;
     }
 
     const formData = new FormData();
-    files.forEach((file) => formData.append("file", file));
+    imageFiles.forEach((file) => formData.append("file", file));
 
     try {
       setLoadingImage(true);
@@ -52,9 +65,7 @@ export const HighlightCreate: React.FC = () => {
           },
         }
       );
-      const imageUrl = response.data.imageUrl;
-      setFieldValue("imageUrl", imageUrl);
-      setUploadedImage(imageUrl); 
+      setFieldValue("imageUrl", response.data.imageUrl);
     } catch (error) {
       console.error("Error uploading file:", error);
       alert("Failed to upload the file.");
@@ -64,9 +75,9 @@ export const HighlightCreate: React.FC = () => {
   };
 
   return (
-    <Create saveButtonProps={saveButtonProps}>
+    <Edit saveButtonProps={saveButtonProps}>
       <form>
-        {/* Nombre del highlight */}
+        {/* Nombre del Highlight */}
         <TextInput
           mt="sm"
           label="Name"
@@ -84,7 +95,7 @@ export const HighlightCreate: React.FC = () => {
           error={errors.description}
         />
 
-        {/* URL de Vimeo */}
+        {/* Vimeo URL */}
         <TextInput
           mt="sm"
           label="Video URL"
@@ -109,37 +120,51 @@ export const HighlightCreate: React.FC = () => {
           {...getInputProps("eventId")}
         />
 
-        {/* Dropzone para la imagen */}
+        {/* Imagen con Dropzone */}
         <Box mt="sm">
           <Text weight={500} size="sm" mb="xs">
             Image Upload
           </Text>
           <Dropzone
-            onDrop={(files) => handleFileUpload(files)}
-            maxSize={3 * 1024 ** 2}
+            onDrop={(files) => setImageFiles(files)}
+            maxSize={3 * 1024 ** 2} // Tamaño máximo: 3 MB
             accept={IMAGE_MIME_TYPE}
           >
             <Group position="center" spacing="xl" style={{ minHeight: 120 }}>
-              <IconPhoto size="2rem" stroke={1.5} />
+              <Dropzone.Accept>
+                <IconUpload size="2rem" stroke={1.5} />
+              </Dropzone.Accept>
+              <Dropzone.Reject>
+                <IconX size="2rem" stroke={1.5} />
+              </Dropzone.Reject>
+              <Dropzone.Idle>
+                <IconPhoto size="2rem" stroke={1.5} />
+              </Dropzone.Idle>
               <div>
-                <Text size="sm" color="dimmed">
-                  Drag files here or click to upload
-                </Text>
+                {imageFiles.length > 0 ? (
+                  <Text size="sm">
+                    {imageFiles.map((file) => file.name).join(", ")}
+                  </Text>
+                ) : (
+                  <Text size="sm" color="dimmed">
+                    Drag files here or click to upload
+                  </Text>
+                )}
               </div>
             </Group>
           </Dropzone>
           <Button
             mt="sm"
             fullWidth
-            disabled={loadingImage}
+            disabled={imageFiles.length === 0}
             loading={loadingImage}
-            onClick={() => alert("Uploading image...")}
+            onClick={handleImageUpload}
           >
             Upload Image
           </Button>
-          {uploadedImage && (
+          {getInputProps("imageUrl").value && (
             <img
-              src={uploadedImage}
+              src={getInputProps("imageUrl").value}
               alt="Uploaded"
               style={{
                 marginTop: "10px",
@@ -151,6 +176,6 @@ export const HighlightCreate: React.FC = () => {
           )}
         </Box>
       </form>
-    </Create>
+    </Edit>
   );
 };

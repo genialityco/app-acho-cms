@@ -42,6 +42,7 @@ export interface IAgenda {
   _id: string;
   name: string;
   description: string;
+  eventId: string;
   startDate: Date;
   organizationId: Number;
   //status: "published" | "draft" | "rejected";
@@ -108,7 +109,24 @@ export interface IHighlight {
   updatedAt?: string;
 }
 
+export interface IQuestion {
+  id: string; 
+  type: "radio" | "text" | "checkbox"; 
+  title: string; 
+  options?: string[];
+}
 
+export interface ISurvey {
+  _id: string; 
+  title: string;
+  questions: IQuestion[]; 
+  isPublished: boolean; 
+  isOpen: boolean; 
+  organizationId: string; 
+  eventId?: string;
+  createdAt?: string; 
+  updatedAt?: string; 
+}
 
 /* 
         "location": {
