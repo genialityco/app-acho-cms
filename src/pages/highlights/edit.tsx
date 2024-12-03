@@ -23,11 +23,13 @@ export const HighlightEdit: React.FC = () => {
       imageUrl: "",
       organizationId: "",
       eventId: "",
+      transcription: "", // Campo para la transcripción
     },
     validate: {
       name: (value) => (value.length < 3 ? "Name is too short" : null),
       description: (value) => (value.length < 10 ? "Description is too short" : null),
       vimeoUrl: (value) => (!value.startsWith("https://") ? "Invalid URL" : null),
+      transcription: (value) => (value.length < 10 ? "Transcription is too short" : null),
     },
   });
 
@@ -35,13 +37,22 @@ export const HighlightEdit: React.FC = () => {
 
   React.useEffect(() => {
     if (data) {
-      const { name, description, vimeoUrl, imageUrl, organizationId, eventId } = data.data;
+      const {
+        name,
+        description,
+        vimeoUrl,
+        imageUrl,
+        organizationId,
+        eventId,
+        transcription,
+      } = data.data;
       setFieldValue("name", name);
       setFieldValue("description", description);
       setFieldValue("vimeoUrl", vimeoUrl);
       setFieldValue("imageUrl", imageUrl);
       setFieldValue("organizationId", organizationId);
       setFieldValue("eventId", eventId);
+      setFieldValue("transcription", transcription); 
     }
   }, [data, setFieldValue]);
 
@@ -118,6 +129,16 @@ export const HighlightEdit: React.FC = () => {
           label="Event ID"
           placeholder="Enter event ID"
           {...getInputProps("eventId")}
+        />
+
+        {/* Campo de Transcripción */}
+        <Textarea
+          mt="sm"
+          label="Transcript"
+          placeholder="Enter video transcription (WEBVTT format)"
+          minRows={6}
+          {...getInputProps("transcription")}
+          error={errors.transcription}
         />
 
         {/* Imagen con Dropzone */}

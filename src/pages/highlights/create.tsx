@@ -21,14 +21,16 @@ export const HighlightCreate: React.FC = () => {
       name: "",
       description: "",
       imageUrl: "",
-      vimeoUrl: "",
+      vimeoUrl: "https://player.vimeo.com/video/",
       organizationId: "66f1d236ee78a23c67fada2a",
       eventId: "66f1e0b57c2e2fbdefa21271",
+      transcription: "", // Campo para la transcripción
     },
     validate: {
       name: (value) => (value.length < 3 ? "Name is too short" : null),
       description: (value) => (value.length < 5 ? "Description is too short" : null),
       vimeoUrl: (value) => (!value.startsWith("https://") ? "Invalid URL" : null),
+      transcription: (value) => (value.length < 10 ? "Transcription is too short" : null),
     },
   });
 
@@ -54,7 +56,7 @@ export const HighlightCreate: React.FC = () => {
       );
       const imageUrl = response.data.imageUrl;
       setFieldValue("imageUrl", imageUrl);
-      setUploadedImage(imageUrl); 
+      setUploadedImage(imageUrl);
     } catch (error) {
       console.error("Error uploading file:", error);
       alert("Failed to upload the file.");
@@ -107,6 +109,16 @@ export const HighlightCreate: React.FC = () => {
           label="Event ID"
           placeholder="Enter event ID"
           {...getInputProps("eventId")}
+        />
+
+        {/* Campo para Transcripción */}
+        <Textarea
+          mt="sm"
+          label="Transcript"
+          placeholder="Enter video transcription (WEBVTT format)"
+          minRows={6}
+          {...getInputProps("transcription")}
+          error={errors.transcription}
         />
 
         {/* Dropzone para la imagen */}
