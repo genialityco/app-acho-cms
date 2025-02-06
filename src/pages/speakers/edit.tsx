@@ -51,7 +51,7 @@ export const SpeakerEdit: React.FC = () => {
       location: "Planet Earth",
       isInternational: false,
       imageUrl: "",
-      eventId: "66f1e0b57c2e2fbdefa21271",
+      eventId: "67a20a31bbf5dd91c12d15c4",
     },
     transformValues: (values) => {
       return values;
@@ -140,7 +140,7 @@ export const SpeakerEdit: React.FC = () => {
         <TextInput
           mt={8}
           label="eventId"
-          placeholder="66f1e0b57c2e2fbdefa21271"
+          placeholder="67a20a31bbf5dd91c12d15c4"
           {...getInputProps("eventId")}
           disabled
         />

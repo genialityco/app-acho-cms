@@ -49,7 +49,7 @@ const speakersList = [
         ],
         "votes": 11,
         "urlPdf": "https://firebasestorage.googleapis.com/v0/b/global-auth-49737.appspot.com/o/b69ffc15-fabc-483b-aba7-1c24c9cd62f4.pdf?alt=media&token=eff69385-cd8e-437e-a81e-f1921fb008fb",
-        "eventId": "66f1e0b57c2e2fbdefa21271",
+        "eventId": "67a20a31bbf5dd91c12d15c4",
         "createdAt": "2024-10-15T20:47:44.515Z",
         "updatedAt": "2024-10-16T14:06:33.348Z",
         "__v": 1,
@@ -127,7 +127,7 @@ export const ModuleEdit: React.FC = () => {
   return (
     <Edit saveButtonProps={saveButtonProps}>
       <form >
-      <TextInput mt={8} label="eventId" placeholder="66f1e0b57c2e2fbdefa21271" {...getInputProps("eventId")} />
+      <TextInput mt={8} label="eventId" placeholder="67a20a31bbf5dd91c12d15c4" {...getInputProps("eventId")} />
       <TextInput mt={8} label="title" placeholder="title" {...getInputProps("title")} />
       <TextInput mt={8} label="topic" placeholder="topic" {...getInputProps("topic")} />
 
