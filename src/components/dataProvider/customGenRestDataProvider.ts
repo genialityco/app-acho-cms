@@ -1,7 +1,7 @@
 import { DataProvider } from "@refinedev/core";
 import dataProvider from "@refinedev/simple-rest";
 
-// const API_URL = "http://172.31.80.1:3000";
+// const API_URL = "http://192.168.0.16:3000";
 const API_URL = "https://lobster-app-uy9hx.ondigitalocean.app"
 
 // Inicializa el dataProvider original de simple-rest
@@ -46,7 +46,6 @@ export const customGenRestDataProvider: DataProvider = {
 
       const response = await fetch(url.toString());
       const data = await response.json();
-      console.log(data);
 
       // Retorna los datos y el total de ítems
       return {
@@ -70,8 +69,6 @@ export const customGenRestDataProvider: DataProvider = {
       let transformedData = response.data?.data
         ? response.data?.data
         : response.data;
-
-      console.log("Custom getOne called:", transformedData, response, params);
 
       return {
         ...response,
@@ -134,8 +131,6 @@ export const customGenRestDataProvider: DataProvider = {
   deleteOne: async (params) => {
     try {
       const response = await restProvider.deleteOne(params);
-
-      console.log("Custom deleteOne called:", response);
 
       return response;
     } catch (error) {
