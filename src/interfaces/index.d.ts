@@ -136,7 +136,7 @@ export interface ISurvey {
           },
           "address": "Ak. 9 #115-30, Bogotá, Colombia"
         },
-        "_id": "67a20a31bbf5dd91c12d15c4",
+        "_id": "67b3b49f32966c0e9873115d",
         "name": "6to. Congreso Nacional de investigación en Hematología y Oncología",
         "description": "",
         "startDate": "2024-11-01T09:00:00.000Z",

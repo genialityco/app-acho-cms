@@ -6,7 +6,7 @@ import ArrayTagInput from "./arrayTagInput";
 export const ModuleCreate: React.FC = () => {
   const { saveButtonProps, values, getInputProps, errors } = useForm({
     initialValues: {
-      "eventId":"67a20a31bbf5dd91c12d15c4",
+      "eventId":"67b3b49f32966c0e9873115d",
       "title": "Investigacion Geniality"+(new Date().toString()),
       "category": "Science",
       "topic": "Quantum Physics",
