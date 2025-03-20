@@ -34,7 +34,7 @@ export const PosterEdit: React.FC = () => {
       institution: "MIT",
       urlPdf: "",
       authors: [],
-      eventId:"67b3b49f32966c0e9873115d"
+      eventId:"67c8aa7032966c0e987346f2"
     },
     transformValues: (values) => {
       return values;
@@ -120,7 +120,7 @@ export const PosterEdit: React.FC = () => {
   return (
     <Edit saveButtonProps={saveButtonProps}>
       <form>
-        <TextInput mt={8} label="eventId" placeholder="67b3b49f32966c0e9873115d" {...getInputProps("eventId")} />
+        <TextInput mt={8} label="eventId" placeholder="67c8aa7032966c0e987346f2" {...getInputProps("eventId")} />
         <TextInput mt={8} label="title" placeholder="title" {...getInputProps("title")} />
         <TextInput mt={8} label="topic" placeholder="topic" {...getInputProps("topic")} />
 
