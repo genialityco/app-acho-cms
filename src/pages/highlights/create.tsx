@@ -23,7 +23,7 @@ export const HighlightCreate: React.FC = () => {
       imageUrl: "",
       vimeoUrl: "https://player.vimeo.com/video/",
       organizationId: "66f1d236ee78a23c67fada2a",
-      eventId: "67c8aa7032966c0e987346f2",
+      eventId: "6807d5a91c2e1e14b22da8b0",
       transcription: "", // Campo para la transcripción
     },
     validate: {

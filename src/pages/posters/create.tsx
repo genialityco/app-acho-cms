@@ -33,7 +33,7 @@ export const PosterCreate: React.FC = () => {
       institution: "MIT",
       urlPdf: "",
       authors: [],
-      eventId:"67c8aa7032966c0e987346f2"
+      eventId:"6807d5a91c2e1e14b22da8b0"
     },
     transformValues: (values) => {
       return values;
@@ -119,7 +119,7 @@ export const PosterCreate: React.FC = () => {
   return (
     <Create saveButtonProps={saveButtonProps}>
       <form>
-        <TextInput mt={8} label="eventId" placeholder="67c8aa7032966c0e987346f2" {...getInputProps("eventId")} />
+        <TextInput mt={8} label="eventId" placeholder="6807d5a91c2e1e14b22da8b0" {...getInputProps("eventId")} />
         <TextInput mt={8} label="title" placeholder="title" {...getInputProps("title")} />
         <TextInput mt={8} label="topic" placeholder="topic" {...getInputProps("topic")} />
 
