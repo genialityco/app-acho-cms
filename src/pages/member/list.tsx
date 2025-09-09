@@ -10,6 +10,7 @@ import { List, ShowButton, EditButton, DeleteButton } from "@refinedev/mantine";
 import { Box, Group, ScrollArea, Table, Pagination } from "@mantine/core";
 import { ColumnFilter, ColumnSorter } from "../../components/table";
 import type { IMember } from "../../interfaces";
+import DropdownFilter from "../../components/Dropdown";
 
 export const MemberList: React.FC = () => {
   const columns = React.useMemo<ColumnDef<IMember>[]>(
@@ -34,6 +35,17 @@ export const MemberList: React.FC = () => {
         id: "properties.specialty",
         header: "Specialty",
         accessorKey: "properties.specialty",
+        meta: {
+          filterOperator: "contains",
+
+          filterElement: {
+            component: DropdownFilter,
+            meta: {
+              options: ["Psicología", "Epidemiología", "Hematología", "Oncología", "Otro",],
+            },
+            // Options to display in the dropdown
+          },
+        },
       },
       {
         id: "properties.phone",

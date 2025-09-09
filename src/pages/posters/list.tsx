@@ -8,22 +8,11 @@ import { Box, Group, ScrollArea, Select, Table, Pagination } from "@mantine/core
 
 import { ColumnFilter, ColumnSorter } from "../../components/table";
 import type { FilterElementProps, ICategory, IPoster } from "../../interfaces";
+import DropdownFilter from "../../components/Dropdown";
 
 export const PosterList: React.FC = () => {
   // 1. Custom Dropdown Filter Component
-  const DropdownFilter = ({ column, options }) => {
-    return (
-      <Select style={{minWidth:'200px'}}
-        placeholder="Filter by..."
-        data={options?.map((option) => ({ value: (option=='Todos')?undefined:option, label: option })) ?? []}
-        value={column.getFilterValue() || ""}
-        onChange={(value) => {
-          console.log("filtroo",value)
-          column.setFilterValue(value || undefined)}}
-        clearable
-      />
-    );
-  };
+
 
   const columns = React.useMemo<ColumnDef<IPoster>[]>(
     () => [

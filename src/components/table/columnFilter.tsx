@@ -1,49 +1,41 @@
 import React, { useState, useEffect } from "react";
 import { TextInput, Menu, ActionIcon, Stack, Group } from "@mantine/core";
 import { IconFilter, IconX, IconCheck } from "@tabler/icons-react";
-
 import type { ColumnButtonProps } from "../../interfaces";
 
 export const ColumnFilter: React.FC<ColumnButtonProps> = ({ column }) => {
   // eslint-disable-next-line
-  const [state, setState] = useState(null as null | { value: any });
+  // Solución: Inicializamos el estado directamente con el valor del filtro de la columna
+  // o con una cadena vacía ('') si no hay valor. Esto garantiza que el input siempre
+  // sea un componente controlado.
+  const [value, setValue] = useState(
+    (column.getFilterValue() as string) ?? ""
+  );
 
   if (!column.getCanFilter()) {
     return null;
   }
-
+  
+  // Usamos useEffect para sincronizar el estado local si el filtro de la columna
+  // cambia por alguna acción externa.
   useEffect(() => {
-    setState({
-      value: column.getFilterValue(),
-    });
-  }, []);
-
-  const open = () =>
-    setState({
-      value: column.getFilterValue(),
-    });
-
-  const close = () => setState(null);
-
+    setValue((column.getFilterValue() as string) ?? "");
+  }, [column.getFilterValue()]);
+  
   // eslint-disable-next-line
-  const change = (value: any) => {
-    setState({ value });
-    column.setFilterValue(value);
-  }
-    
-
-
+  const change = (newValue: any) => {
+    setValue(newValue);
+    column.setFilterValue(newValue);
+  };
+  
   const clear = () => {
     column.setFilterValue(undefined);
-    close();
+    setValue(""); // Aseguramos que el estado local también se limpie
   };
-
   const save = () => {
-    if (!state) return;
-    column.setFilterValue(state.value);
-    close();
+    column.setFilterValue(value);
   };
-
+  
   const renderFilterElement = () => {
     // eslint-disable-next-line
     const filterElement = (column.columnDef?.meta as any)?.filterElement;
@@ -51,19 +43,16 @@ export const ColumnFilter: React.FC<ColumnButtonProps> = ({ column }) => {
     const filterMeta = filterElement?.meta ?? {};
 
     if (!FilterComponent ) {
-      return <TextInput autoComplete="off" value={state?.value} onChange={(e) => change(e.target.value)} />;
+      // Usamos el estado 'value' directamente
+      return <TextInput autoComplete="off" value={value} onChange={(e) => change(e.target.value)} />;
     }
 
-    return <FilterComponent column={column} value={state?.value} onChange={change} {...filterMeta} />;
+    return <FilterComponent column={column} value={value} onChange={change} {...filterMeta} />;
   };
 
   return (
     <>
-      
-        
-          {renderFilterElement()}
-    
-
+      {renderFilterElement()}
       {/*<Menu
       opened={!!state}
       position="bottom"

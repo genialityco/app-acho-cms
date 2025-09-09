@@ -9,14 +9,14 @@ export const EventShow: React.FC = () => {
   const { query: queryResult } = useShow<IEvent>();
   const { data, isLoading } = queryResult;
   const record = data?.data;
-
-  const { data: categoryData } = useOne<ICategory>({
-    resource: "categories",
-    id: record?.category.id || "",
-    queryOptions: {
-      enabled: !!record?.category.id,
-    },
-  });
+  console.log("event record", record);
+  // const { data: categoryData } = useOne<ICategory>({
+  //   resource: "categories",
+  //   id: record?.category.id || "",
+  //   queryOptions: {
+  //     enabled: !!record?.category.id,
+  //   },
+  // });
 
   return (
     <Show isLoading={isLoading}>
@@ -33,10 +33,10 @@ export const EventShow: React.FC = () => {
       </Title>
       <Text mt="xs">{record?.status}</Text>
 
-      <Title mt="xs" order={5}>
+      {/* <Title mt="xs" order={5}>
         Category
       </Title>
-      <Text mt="xs">{categoryData?.data?.title}</Text>
+      <Text mt="xs">{categoryData?.data?.title}</Text> */}
 
       <Title mt="xs" order={5}>
         Content

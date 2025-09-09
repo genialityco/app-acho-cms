@@ -54,6 +54,7 @@ export const HighlightEdit: React.FC = () => {
       setFieldValue("eventId", eventId);
       setFieldValue("transcription", transcription); 
     }
+    console.log("highlight data", data);
   }, [data, setFieldValue]);
 
   const handleImageUpload = async () => {
