@@ -1,8 +1,8 @@
 import { DataProvider } from "@refinedev/core";
 import dataProvider from "@refinedev/simple-rest";
 
-// const API_URL = "http://192.168.0.16:3000";
-const API_URL = "https://lobster-app-uy9hx.ondigitalocean.app"
+const API_URL = "http://localhost:3000";
+// const API_URL = "https://lobster-app-uy9hx.ondigitalocean.app"
 // const API_URL ="http://localhost:3000"; // URL del backend
 
 // Inicializa el dataProvider original de simple-rest
@@ -19,34 +19,47 @@ export const customGenRestDataProvider: DataProvider = {
   getList: async ({ resource, pagination, filters, sorters }) => {
     try {
       const { current = 1, pageSize = 10 } = pagination ?? {};
-      const query: Record<string, any> = {
-        page: current,
-        limit: pageSize,
-      };
+      
+      // Crear URLSearchParams para manejar parámetros de manera ordenada
+      const params = new URLSearchParams();
+      
+      // Agregar paginación
+      params.append('pageSize', pageSize.toString());
+      params.append('current', current.toString());
 
-      // Aplica filtros (si los hay)
-      if (filters) {
-        filters.forEach((filter) => {
-          query[filter.field] = filter.value;
+      // 🔧 NUEVA IMPLEMENTACIÓN: Aplica filtros manteniendo la estructura de array
+      if (filters && filters.length > 0) {
+        console.log('🔍 Procesando filtros:', filters); // Debug
+        
+        filters.forEach((filter, index) => {
+          const { field, operator, value } = filter;
+          
+          // Estructura: filters[index][campo] = valor
+          params.append(`filters[${index}][field]`, field);
+          params.append(`filters[${index}][operator]`, operator || 'eq');
+          params.append(`filters[${index}][value]`, value?.toString() || '');
         });
       }
 
       // Aplica ordenamiento (si lo hay)
-      if (sorters) {
-        const sorterQuery = sorters.map(
-          (sort) => `${sort.field}:${sort.order}`
-        );
-        query.sort = sorterQuery.join(",");
+      if (sorters && sorters.length > 0) {
+        sorters.forEach((sorter, index) => {
+          params.append(`sorters[${index}][field]`, sorter.field);
+          params.append(`sorters[${index}][order]`, sorter.order);
+        });
       }
 
-      // Realiza la solicitud al backend
-      const url = new URL(`${API_URL}/${resource}`);
-      Object.keys(query).forEach((key) =>
-        url.searchParams.append(key, query[key])
-      );
+      // 🐛 Debug: Ver qué parámetros se están enviando
+      console.log('📤 Parámetros enviados al backend:', params.toString());
 
-      const response = await fetch(url.toString());
+      // Construir la URL final
+      const url = `${API_URL}/${resource}?${params.toString()}`;
+      console.log('🌐 URL final:', url); // Debug
+
+      const response = await fetch(url);
       const data = await response.json();
+
+      console.log('📥 Respuesta del backend:', data); // Debug
 
       // Retorna los datos y el total de ítems
       return {

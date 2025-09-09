@@ -18,11 +18,17 @@ export const MemberList: React.FC = () => {
         id: "properties.fullName",
         header: "Full Name",
         accessorKey: "properties.fullName",
+        meta: {
+          filterOperator: "contains",
+        },
       },
       {
         id: "properties.email",
         header: "Email",
         accessorKey: "properties.email",
+        meta: {
+          filterOperator: "contains",
+        },
       },
       {
         id: "properties.specialty",
@@ -33,6 +39,9 @@ export const MemberList: React.FC = () => {
         id: "properties.phone",
         header: "Phone",
         accessorKey: "properties.phone",
+        meta: {
+          filterOperator: "contains",
+        },
       },
       {
         id: "memberActive",

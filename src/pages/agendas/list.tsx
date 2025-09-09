@@ -26,9 +26,12 @@ export const AgendaList: React.FC = () => {
   const columns = React.useMemo<ColumnDef<IAgenda>[]>(
     () => [
       {
-        id: "id",
+        id: "_id",
         header: "ID",
         accessorKey: "_id",
+        meta: {
+          filterOperator: "eq",
+        },
       },
       {
         id: "eventId.name",

@@ -25,6 +25,9 @@ export const EventList: React.FC = () => {
         id: "_id",
         header: "ID",
         accessorKey: "_id",
+        meta: {
+          filterOperator: "eq",
+        },
       },
       {
         id: "name",
