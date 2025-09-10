@@ -6,7 +6,7 @@ import { Title, Text } from "@mantine/core";
 import type { ICategory, ISpeaker } from "../../interfaces";
 import { EntityFieldRenderer } from "../../components/showView/showView";
 
-export const SpeakerShow: React.FC = () => {
+export const HighlightsShow: React.FC = () => {
   const { query: queryResult } = useShow<ISpeaker>();
   const { data, isLoading } = queryResult;
   const record = data?.data;

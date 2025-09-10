@@ -4,6 +4,7 @@ import { Show, MarkdownField } from "@refinedev/mantine";
 import { Title, Text } from "@mantine/core";
 
 import type { ICategory, IEvent } from "../../interfaces";
+import { EntityFieldRenderer } from "../../components/showView/showView";
 
 export const EventShow: React.FC = () => {
   const { query: queryResult } = useShow<IEvent>();
@@ -20,28 +21,7 @@ export const EventShow: React.FC = () => {
 
   return (
     <Show isLoading={isLoading}>
-      <Title order={5}>Id</Title>
-      <Text mt="xs">{record?.id}</Text>
-
-      <Title mt="xs" order={5}>
-        Title
-      </Title>
-      <Text mt="xs">{record?.title}</Text>
-
-      <Title mt="xs" order={5}>
-        Status
-      </Title>
-      <Text mt="xs">{record?.status}</Text>
-
-      {/* <Title mt="xs" order={5}>
-        Category
-      </Title>
-      <Text mt="xs">{categoryData?.data?.title}</Text> */}
-
-      <Title mt="xs" order={5}>
-        Content
-      </Title>
-      <MarkdownField value={record?.content} />
+      <EntityFieldRenderer data={record || {}}></EntityFieldRenderer>
     </Show>
   );
 };

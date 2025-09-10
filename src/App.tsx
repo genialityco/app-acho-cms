@@ -62,6 +62,10 @@ import { HighlightCreate } from "./pages/highlights";
 import { HighlightEdit } from "./pages/highlights/edit";
 import { SurveyCreate, SurveyEdit, SurveyList } from "./pages/surveys";
 import ListStatistics from "./pages/statistics/list";
+import { NewsShow } from "./pages/news/show";
+import { MemberShow } from "./pages/member/show";
+import { NotificationShow } from "./pages/notifications/show";
+import { HighlightsShow } from "./pages/highlights/show";
 
 // Mock de credenciales de autenticación
 const authCredentials = {
@@ -195,7 +199,8 @@ const App: React.FC = () => {
                 name: "highlights",
                 list: "/highlights",
                 create: "/highlights/create",
-                edit:"/highlights/edit/:id"
+                edit:"/highlights/edit/:id",
+                show: "/highlights/show/:id", 
               },
               {
                 name: "surveys",
@@ -275,13 +280,13 @@ const App: React.FC = () => {
                   <Route index element={<NewsList />} />
                   <Route path="create" element={<NewsCreate />} />
                   <Route path="edit/:id" element={<NewsEdit />} />
-                  {/* <Route path="show/:id" element={<ModuleShow />} /> */}
+                  <Route path="show/:id" element={<NewsShow />} /> 
                 </Route>
                 <Route path="/members">
                   <Route index element={<MemberList />} />
                   {/* <Route path="create" element={<NewsCreate />} />
                   <Route path="edit/:id" element={<NewsEdit />} /> */}
-                  {/* <Route path="show/:id" element={<ModuleShow />} /> */}
+                 <Route path="show/:id" element={<MemberShow />} /> 
                 </Route>
                 <Route path="/notification-templates">
                   <Route index element={<NotificationTemplateList />} />
@@ -293,7 +298,7 @@ const App: React.FC = () => {
                     path="edit/:id"
                     element={<NotificationTemplateEdit />}
                   />
-                  {/* <Route path="show/:id" element={<ModuleShow />} /> */}
+                  <Route path="show/:id" element={<NotificationShow />} /> 
                 </Route>
                 <Route path="/certificates">
                   <Route index element={<CertificatesList />} />
@@ -305,7 +310,7 @@ const App: React.FC = () => {
                   <Route index element={<HighlightList />} />
                   <Route path="create" element={<HighlightCreate />} />
                   <Route path="edit/:id" element={<HighlightEdit />} /> 
-                  {/* <Route path="show/:id" element={<ModuleShow />} /> */}
+                  <Route path="show/:id" element={<HighlightsShow />} /> 
                 </Route>
                 <Route path="/surveys">
                   <Route index element={<SurveyList />} />

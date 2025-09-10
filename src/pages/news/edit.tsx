@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Edit, useForm } from "@refinedev/mantine";
 import { TextInput, Text, Box, Group, Button } from "@mantine/core";
 import MDEditor from "@uiw/react-md-editor";
@@ -29,6 +29,7 @@ export const NewsEdit: React.FC = () => {
       content: "",
       organizationId: "",
       featuredImage: "",
+      documents: [],
     },
     validate: {
       title: (value) => (value.length < 3 ? "Title is too short" : null),
@@ -36,26 +37,25 @@ export const NewsEdit: React.FC = () => {
     },
   });
 
-  // Cargar datos iniciales del backend
-  const { data } = queryResult;
-
-  React.useEffect(() => {
-    if (data) {
+  // Actualizar los valores del formulario cuando queryResult esté disponible
+  useEffect(() => {
+    if (queryResult?.data?.data) {
       const {
         title,
         content,
         organizationId,
         featuredImage,
         documents: docsFromApi,
-      } = data.data;
-      setFieldValue("title", title);
-      setFieldValue("content", content);
-      setFieldValue("organizationId", organizationId);
-      setFieldValue("featuredImage", featuredImage);
-      setDocuments(Array.isArray(docsFromApi) ? docsFromApi : []);
-      setFieldValue("documents", Array.isArray(docsFromApi) ? docsFromApi : []);
+      } = queryResult.data.data;
+      setFieldValue("title", title || "");
+      setFieldValue("content", content || "");
+      setFieldValue("organizationId", organizationId || "");
+      setFieldValue("featuredImage", featuredImage || "");
+      const initialDocuments = Array.isArray(docsFromApi) ? docsFromApi : [];
+      setFieldValue("documents", initialDocuments); ;
+      setDocuments(initialDocuments);
     }
-  }, [data, setFieldValue]);
+  }, [queryResult?.data?.data, setFieldValue]);
 
   // Manejar la carga de imágenes
   const handleImageUpload = async () => {
@@ -163,7 +163,7 @@ export const NewsEdit: React.FC = () => {
           </Text>
           <Dropzone
             onDrop={(files) => setFeaturedImageFiles(files)}
-            maxSize={3 * 1024 ** 2} // Tamaño máximo: 3 MB
+            maxSize={3 * 1024 ** 2}
             accept={IMAGE_MIME_TYPE}
           >
             <Group position="center">
@@ -259,7 +259,7 @@ export const NewsEdit: React.FC = () => {
             <Box mt="sm">
               <Text size="sm" weight={500}>Documentos cargados:</Text>
               {documents.map((doc) => (
-                <Group key={doc.id || doc._id || doc.url} spacing={8}>
+                <Group key={doc.id || doc.id || doc.url} spacing={8}>
                   <Text size="sm">{doc.name}</Text>
                   <a href={doc.url} target="_blank" rel="noopener noreferrer">
                     <Text size="xs" color="blue">Ver</Text>
@@ -270,7 +270,11 @@ export const NewsEdit: React.FC = () => {
           )}
         </Box>
         {/* Campo oculto para documentos */}
-        <input type="hidden" {...getInputProps("documents")} value={JSON.stringify(documents)} />
+        <input
+          type="hidden"
+          {...getInputProps("documents")}
+          value={JSON.stringify(documents)}
+        />
       </form>
     </Edit>
   );

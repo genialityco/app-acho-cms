@@ -6,7 +6,7 @@ import {
   HeaderGroup,
   RowModel,
 } from "@tanstack/react-table";
-import { List, EditButton, DeleteButton, CreateButton } from "@refinedev/mantine";
+import { List, EditButton, DeleteButton, CreateButton, ShowButton } from "@refinedev/mantine";
 import {
   Box,
   Group,
@@ -57,8 +57,10 @@ export const HighlightList: React.FC = () => {
       enableSorting: false,
       cell: ({ getValue }) => (
         <Group spacing="xs" noWrap>
+          <ShowButton hideText recordItemId={getValue() as string} />
           <EditButton hideText recordItemId={getValue() as string} />
           <DeleteButton hideText recordItemId={getValue() as string} />
+
         </Group>
       ),
     },

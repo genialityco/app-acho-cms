@@ -19,6 +19,8 @@ import MDEditor from "@uiw/react-md-editor";
 import { useCustom, useList, useOne } from "@refinedev/core";
 import { IAgenda } from "../../interfaces";
 import { AgendaEdit } from "../agendas";
+import { parseISO, formatISO } from "date-fns";
+import { useParams } from "react-router-dom"; // Add useParams to get ID from route
 
 export const EventEdit: React.FC = () => {
   const [loadingEventImage, setLoadingEventImage] = useState(false);
@@ -27,8 +29,16 @@ export const EventEdit: React.FC = () => {
   const [miniatureFiles, setMiniatureFiles] = useState<File[]>([]);
   const [eventAgenda, setEventAgenda] = useState<IAgenda | null>(null);
 
+  // Get event ID from route
+  const { id } = useParams<{ id: string }>();
+
   const { saveButtonProps, getInputProps, setFieldValue, refineCore, errors } =
     useForm({
+      refineCoreProps: {
+        resource: "events",
+        action: "edit",
+        id, // Use ID from useParams
+      },
       initialValues: {
         name: "",
         description: "",
@@ -37,8 +47,8 @@ export const EventEdit: React.FC = () => {
         location: {
           address: "",
           coordinates: {
-            latitude: 0,
-            longitude: 0,
+            latitude: 0.0,
+            longitude: 0.0,
           },
         },
         styles: {
@@ -46,18 +56,39 @@ export const EventEdit: React.FC = () => {
           miniatureImage: "",
         },
         eventSections: {
-          agenda: true,
-          speakers: true,
-          documents: true,
-          ubication: true,
-          certificate: true,
-          posters: true,
+          agenda: false,
+          speakers: false,
+          documents: false,
+          ubication: false,
+          certificate: false,
+          posters: false,
         },
       },
       validate: {
         name: (value) => (value.length < 2 ? "Event name is too short" : null),
         startDate: (value) => (!value ? "Start date is required" : null),
         endDate: (value) => (!value ? "End date is required" : null),
+      },
+      transformValues: (values) => {
+        console.log("Transformed values:", values); // Debug transformed values
+        return {
+          ...values,
+          startDate: values.startDate
+            ? formatISO(values.startDate, { representation: "complete" })
+            : null,
+          endDate: values.endDate
+            ? formatISO(values.endDate, { representation: "complete" })
+            : null,
+          location: {
+            ...values.location,
+            coordinates: {
+              latitude: parseFloat(values.location.coordinates.latitude.toFixed(7)),
+              longitude: parseFloat(
+                values.location.coordinates.longitude.toFixed(7)
+              ),
+            },
+          },
+        };
       },
     });
 
@@ -68,20 +99,86 @@ export const EventEdit: React.FC = () => {
     resource: "agendas",
   });
 
+  // Helper to convert local date to UTC Date object
+  const toUTCDate = (date: Date | null) => {
+    if (!date) return null;
+    return new Date(
+      Date.UTC(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        date.getHours(),
+        date.getMinutes(),
+        date.getSeconds(),
+        date.getMilliseconds()
+      )
+    );
+  };
+
   useEffect(() => {
-    if (data?.data) {
-      const { startDate, endDate } = data.data;
-      setFieldValue("startDate", startDate ? new Date(startDate) : null);
-      setFieldValue("endDate", endDate ? new Date(endDate) : null);
+    if (data?.data && refineCore.form) {
+      const {
+        name,
+        description,
+        startDate,
+        endDate,
+        location,
+        styles,
+        eventSections,
+      } = data.data;
+
+      // Parse UTC dates from DB
+      const parsedStartDate = startDate ? parseISO(startDate) : null;
+      const parsedEndDate = endDate ? parseISO(endDate) : null;
+
+      // Log for debugging
+      console.log("DB startDate:", startDate, "Parsed:", parsedStartDate);
+      console.log("DB endDate:", endDate, "Parsed:", parsedEndDate);
+      console.log("Full DB data:", data.data);
+      console.log("Form initial values:", refineCore.form?.getValues());
+
+      // Set all fields explicitly
+      setFieldValue("name", name || "");
+      setFieldValue("description", description || "");
+      setFieldValue("startDate", parsedStartDate);
+      setFieldValue("endDate", parsedEndDate);
+      setFieldValue("location.address", location?.address || "");
+      setFieldValue(
+        "location.coordinates.latitude",
+        location?.coordinates?.latitude || 0.0
+      );
+      setFieldValue(
+        "location.coordinates.longitude",
+        location?.coordinates?.longitude || 0.0
+      );
+      setFieldValue("styles.eventImage", styles?.eventImage || "");
+      setFieldValue("styles.miniatureImage", styles?.miniatureImage || "");
+      setFieldValue("eventSections.agenda", eventSections?.agenda ?? false);
+      setFieldValue("eventSections.speakers", eventSections?.speakers ?? false);
+      setFieldValue("eventSections.documents", eventSections?.documents ?? false);
+      setFieldValue("eventSections.ubication", eventSections?.ubication ?? false);
+      setFieldValue(
+        "eventSections.certificate",
+        eventSections?.certificate ?? false
+      );
+      setFieldValue("eventSections.posters", eventSections?.posters ?? false);
     }
-  }, [data, setFieldValue]);
+  }, [data, setFieldValue, refineCore.form]);
+
+  useEffect(() => {
+    if (refineCore.form) {
+      console.log("Form isDirty:", refineCore.form?.isDirty);
+      console.log("Current form values:", refineCore.form?.getValues());
+    } else {
+      console.log("Form not initialized yet");
+    }
+  }, [refineCore.form]);
 
   useEffect(() => {
     if (agendaData?.data && data?.data?._id) {
       const agenda = agendaData.data.find(
         (agendaItem) => agendaItem.eventId._id === data.data._id
       );
-
       setEventAgenda(agenda || null);
     }
   }, [agendaData, data]);
@@ -122,7 +219,6 @@ export const EventEdit: React.FC = () => {
   return (
     <Edit saveButtonProps={saveButtonProps}>
       <form>
-        {/* Nombre del evento */}
         <TextInput
           mt="sm"
           label="Event Name"
@@ -130,34 +226,50 @@ export const EventEdit: React.FC = () => {
           {...getInputProps("name")}
           error={errors.name}
         />
-
-        {/* Descripción */}
         <Box mt="sm">
           <Text weight={500} size="sm" color="gray.700">
             Description
           </Text>
           <MDEditor data-color-mode="light" {...getInputProps("description")} />
         </Box>
-
-        {/* Fechas */}
         <Group grow mt="sm">
           <DateTimePicker
             onPointerEnterCapture={undefined}
             onPointerLeaveCapture={undefined}
             {...getInputProps("startDate")}
+            onChange={(value) => {
+              const utcDate = toUTCDate(value);
+              console.log("Selected startDate:", value, "UTC:", utcDate); // Debug selection
+              setFieldValue("startDate", utcDate);
+            }}
             label="Start Date and Time"
             placeholder="Pick date and time"
+            valueFormat="YYYY-MM-DD HH:mm:ss"
+            value={
+              getInputProps("startDate").value
+                ? new Date(getInputProps("startDate").value)
+                : null
+            }
           />
           <DateTimePicker
             onPointerEnterCapture={undefined}
             onPointerLeaveCapture={undefined}
             {...getInputProps("endDate")}
+            onChange={(value) => {
+              const utcDate = toUTCDate(value);
+              console.log("Selected endDate:", value, "UTC:", utcDate); // Debug selection
+              setFieldValue("endDate", utcDate);
+            }}
             label="End Date and Time"
             placeholder="Pick date and time"
+            valueFormat="YYYY-MM-DD HH:mm:ss"
+            value={
+              getInputProps("endDate").value
+                ? new Date(getInputProps("endDate").value)
+                : null
+            }
           />
         </Group>
-
-        {/* Ubicación */}
         <TextInput
           mt="sm"
           label="Location Address"
@@ -190,8 +302,6 @@ export const EventEdit: React.FC = () => {
             {...getInputProps("location.coordinates.longitude")}
           />
         </Group>
-
-        {/* Dropzone para Event Image */}
         <Box mt="sm">
           <Text weight={500} size="sm" mb="xs">
             Event Image
@@ -240,8 +350,6 @@ export const EventEdit: React.FC = () => {
             />
           )}
         </Box>
-
-        {/* Dropzone para Miniature Image */}
         <Box mt="sm">
           <Text weight={500} size="sm" mb="xs">
             Miniature Image
@@ -294,8 +402,6 @@ export const EventEdit: React.FC = () => {
             />
           )}
         </Box>
-
-        {/* Secciones del evento */}
         <Box mt="sm">
           <Text weight={500} size="sm" color="gray.700" mb="xs">
             Event Sections
