@@ -79,7 +79,7 @@ export const useQuillVideoHandlers = (quillRef: { current: { getEditor: () => an
         formData.append('file', file); // Ensure 'file' matches server expectation
 
         try {
-          const response = await axios.post(uploadEndpoint, formData, {
+          const response = await axios.post(uploadEndpoint.toString(), formData, {
             headers: {
               ...headers,
               // Axios automatically sets Content-Type for FormData, so no need to specify
@@ -151,7 +151,7 @@ export const useQuillVideoHandlers = (quillRef: { current: { getEditor: () => an
         formData.append('file', file); // Ensure 'file' matches server expectation
 
         try {
-          const response = await axios.post(uploadEndpoint, formData, {
+          const response = await axios.post(uploadEndpoint.toString(), formData, {
             headers: {
               ...headers,
               // Axios automatically sets Content-Type for FormData
