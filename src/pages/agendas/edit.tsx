@@ -4,6 +4,8 @@ import EditSessionsForm from "./editSessionsForm";
 import type { ICategory } from "../../interfaces";
 import { DateTimePicker } from "@mantine/dates";
 import dayjs from "dayjs";
+import { useEffect } from "react";
+import { parseISO } from "date-fns";
 
 export const AgendaEdit: React.FC = () => {
   const {
@@ -16,19 +18,17 @@ export const AgendaEdit: React.FC = () => {
   } = useForm({
     refineCoreProps: {
       redirect: false,
+      warnWhenUnsavedChanges: false,
     },
+    // Remueve o simplifica initialValues si usas useEffect
     initialValues: {
       _id: "",
-      eventId: {
-        name: "",
-      },
+      eventId: { name: "" },
       title: "",
       sessions: [],
-      startDate: new Date().toString(),
+      startDate: "",
       status: "",
-      category: {
-        id: "",
-      },
+      category: { id: "" },
       content: "",
     },
     transformValues: (values) => {
@@ -49,6 +49,47 @@ export const AgendaEdit: React.FC = () => {
     //   content: (value) => (value.length < 10 ? "Too short content" : null),
     // },
   });
+  useEffect(() => { console.log("valores a editar: ", values)}, [values]);
+
+  useEffect(() => {
+    if (queryResult?.data?.data) {
+      const data = queryResult.data.data;
+  
+      // 🔹 Campos simples
+      setFieldValue("_id", data._id || "");
+      setFieldValue("title", data.title || "");
+      setFieldValue("room", data.room || "");
+  
+      // 🔹 Fechas (si tu formulario espera objetos Date)
+      setFieldValue(
+        "startDateTime",
+        data.startDateTime ? new Date(data.startDateTime) : null
+      );
+      setFieldValue(
+        "endDateTime",
+        data.endDateTime ? new Date(data.endDateTime) : null
+      );
+  
+      // 🔹 Speakers: se mapean a solo los campos que uses en tu formulario
+      const mappedSpeakers = (data.speakers || []).map((sp: any) => ({
+        _id: sp._id,
+        names: sp.names,
+        description: sp.description,
+        location: sp.location,
+        isInternational: sp.isInternational,
+        imageUrl: sp.imageUrl,
+      }));
+      setFieldValue("speakers", mappedSpeakers);
+  
+      // 🔹 ModuleId: puedes guardar solo el id o el objeto entero
+      setFieldValue("moduleId", data.moduleId?._id || data.moduleId);
+  
+      // 🔹 Si necesitas el objeto completo del módulo
+      // setFieldValue("module", data.moduleId || null);
+    }
+  }, [queryResult?.data, setFieldValue]);
+  // Se ejecuta cada vez que los datos de la API cambian
+
 
   // Function to add a new session to the array
   const addSession = () => {
@@ -115,6 +156,21 @@ export const AgendaEdit: React.FC = () => {
     //defaultValue: values?.categories.map(category => category.id), // pre-select related categories
   });
 
+  const toUTCDate = (date: Date | null) => {
+    if (!date) return null;
+    return new Date(
+      Date.UTC(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        date.getHours(),
+        date.getMinutes(),
+        date.getSeconds(),
+        date.getMilliseconds()
+      )
+    );
+  };
+
   return (
     <Edit saveButtonProps={saveButtonProps}>
       <form>
@@ -155,10 +211,10 @@ export const AgendaEdit: React.FC = () => {
                   {...getInputProps(`sessions.${index}.startDateTime`)}
                   value={
                     getInputProps(`sessions.${index}.startDateTime`).value
-                      ? dayjs(getInputProps(`sessions.${index}.startDateTime`).value).toDate()
+                      ? parseISO(getInputProps(`sessions.${index}.startDateTime`).value)
                       : null
                   } // Format date correctly
-                  onChange={(value) => getInputProps(`sessions.${index}.startDateTime`).onChange(value)} // Ensure change updates value
+                  onChange={(value) => getInputProps(`sessions.${index}.startDateTime`).onChange(toUTCDate(value))} // Ensure change updates value
                   required
                 />
 
@@ -169,10 +225,10 @@ export const AgendaEdit: React.FC = () => {
                   {...getInputProps(`sessions.${index}.endDateTime`)}
                   value={
                     getInputProps(`sessions.${index}.endDateTime`).value
-                      ? dayjs(getInputProps(`sessions.${index}.endDateTime`).value).toDate()
+                      ? parseISO(getInputProps(`sessions.${index}.endDateTime`).value)
                       : null
                   } // Format date correctly
-                  onChange={(value) => getInputProps(`sessions.${index}.endDateTime`).onChange(value)} // Ensure change updates value
+                  onChange={(value) => getInputProps(`sessions.${index}.endDateTime`).onChange(toUTCDate(value))} // Ensure change updates value
                 />
 
                 <TextInput
@@ -203,7 +259,7 @@ export const AgendaEdit: React.FC = () => {
                         {...getInputProps(`sessions.${index}.speakers.${speakerIndex}._id`)}
                         data={speakerSelectProps.data}
                         searchable={true}
-                        onSearchChange={(search)=>console.log('buscandooo',search)}
+                        //onSearchChange={(search)=>console.log('buscandooo',search)}
                         filterDataOnExactSearchMatch={false}
 
                         

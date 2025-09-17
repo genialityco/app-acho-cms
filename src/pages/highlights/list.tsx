@@ -34,6 +34,9 @@ export const HighlightList: React.FC = () => {
       id: "description",
       header: "Descripción",
       accessorKey: "description",
+      meta: {
+        filterOperator: "contains",
+      },
     },
     {
       id: "vimeoUrl",

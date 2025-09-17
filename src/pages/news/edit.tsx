@@ -1,21 +1,41 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Edit, useForm } from "@refinedev/mantine";
 import { TextInput, Text, Box, Group, Button } from "@mantine/core";
-import MDEditor from "@uiw/react-md-editor";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 import { Dropzone, IMAGE_MIME_TYPE } from "@mantine/dropzone";
-import { IconUpload, IconPhoto, IconX } from "@tabler/icons-react";
+import { IconUpload, IconPhoto, IconX, IconVideo } from "@tabler/icons-react";
 import axios from "axios";
 import { Dropzone as DocDropzone } from "@mantine/dropzone";
 import { v4 as uuidv4 } from "uuid";
+import { getQuillConfig, useQuillVideoHandlers } from "../../components/quill";
+
+// Importar el VideoBlot y los helpers
+
 
 export const NewsEdit: React.FC = () => {
   const [loadingImage, setLoadingImage] = useState(false);
+  const [loadingVideo, setLoadingVideo] = useState(false);
   const [featuredImageFiles, setFeaturedImageFiles] = useState<File[]>([]);
   const [docFiles, setDocFiles] = useState<File[]>([]);
   const [docLoading, setDocLoading] = useState(false);
   const [documents, setDocuments] = useState<
     { id: string; name: string; type: string; url: string }[]
   >([]);
+  
+  // Ref para ReactQuill
+  const quillRef = useRef<ReactQuill>(null);
+
+  // Usar el hook personalizado para manejar videos e imágenes en el editor
+  const {
+    insertVideoFromFile,
+    insertVideoFromUrl,
+    insertImageFromFile,
+    insertImageFromUrl,
+  } = useQuillVideoHandlers(quillRef);
+
+  // Obtener configuración predeterminada de Quill
+  const { modules, formats } = getQuillConfig();
 
   const {
     saveButtonProps,
@@ -24,12 +44,15 @@ export const NewsEdit: React.FC = () => {
     refineCore: { queryResult },
     errors,
   } = useForm({
+    refineCoreProps: {
+      warnWhenUnsavedChanges: false,
+    },
     initialValues: {
       title: "",
       content: "",
       organizationId: "",
       featuredImage: "",
-      documents: [],
+      documents: [] as { id: string; name: string; type: string; url: string }[],
     },
     validate: {
       title: (value) => (value.length < 3 ? "Title is too short" : null),
@@ -52,13 +75,52 @@ export const NewsEdit: React.FC = () => {
       setFieldValue("organizationId", organizationId || "");
       setFieldValue("featuredImage", featuredImage || "");
       const initialDocuments = Array.isArray(docsFromApi) ? docsFromApi : [];
-      setFieldValue("documents", initialDocuments); ;
+      setFieldValue("documents", initialDocuments);
       setDocuments(initialDocuments);
     }
   }, [queryResult?.data?.data, setFieldValue]);
 
-  // Manejar la carga de imágenes
-  const handleImageUpload = async () => {
+  // Handlers para el editor de texto enriquecido
+  const handleImageUploadInEditor = async () => {
+    try {
+      setLoadingImage(true);
+      await insertImageFromFile(
+        "https://lobster-app-uy9hx.ondigitalocean.app/upload/image",
+        { 'Content-Type': 'multipart/form-data' }
+      );
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Failed to upload the image.');
+    } finally {
+      setLoadingImage(false);
+    }
+  };
+
+  const handleVideoUploadInEditor = async () => {
+    try {
+      setLoadingVideo(true);
+      await insertVideoFromFile(
+        "https://lobster-app-uy9hx.ondigitalocean.app/upload/document",
+        { 'Content-Type': 'multipart/form-data' }
+      );
+    } catch (error) {
+      console.error('Error uploading video:', error);
+      alert('Failed to upload the video.');
+    } finally {
+      setLoadingVideo(false);
+    }
+  };
+
+  const handleImageUrlInEditor = () => {
+    insertImageFromUrl('Ingresa la URL de la imagen:');
+  };
+
+  const handleVideoUrlInEditor = () => {
+    insertVideoFromUrl('Ingresa la URL del video (YouTube, Vimeo, etc.):');
+  };
+
+  // Manejar la carga de imágenes destacadas
+  const handleFeaturedImageUpload = async () => {
     if (featuredImageFiles.length === 0) {
       alert("No files selected!");
       return;
@@ -80,8 +142,8 @@ export const NewsEdit: React.FC = () => {
       );
       setFieldValue("featuredImage", response.data.imageUrl);
     } catch (error) {
-      console.error("Error uploading image:", error);
-      alert("Failed to upload the image.");
+      console.error("Error uploading featured image:", error);
+      alert("Failed to upload the featured image.");
     } finally {
       setLoadingImage(false);
     }
@@ -143,12 +205,68 @@ export const NewsEdit: React.FC = () => {
           error={errors.title}
         />
 
-        {/* Contenido */}
+        {/* Editor de contenido con componente reutilizable */}
         <Box mt="sm">
           <Text weight={500} size="sm" color="gray.700">
             Content
           </Text>
-          <MDEditor data-color-mode="light" {...getInputProps("content")} />
+          
+          {/* Botones para insertar media en el editor */}
+          <Group spacing="xs" mb="sm">
+            <Button
+              size="xs"
+              variant="light"
+              leftIcon={<IconPhoto size="1rem" />}
+              onClick={handleImageUploadInEditor}
+              loading={loadingImage}
+            >
+              Subir Imagen
+            </Button>
+            <Button
+              size="xs"
+              variant="light"
+              leftIcon={<IconVideo size="1rem" />}
+              onClick={handleVideoUploadInEditor}
+              loading={loadingVideo}
+            >
+              Subir Video
+            </Button>
+            <Button
+              size="xs"
+              variant="outline"
+              leftIcon={<IconPhoto size="1rem" />}
+              onClick={handleImageUrlInEditor}
+            >
+              Imagen URL
+            </Button>
+            <Button
+              size="xs"
+              variant="outline"
+              leftIcon={<IconVideo size="1rem" />}
+              onClick={handleVideoUrlInEditor}
+            >
+              Video URL
+            </Button>
+          </Group>
+
+          {/* ReactQuill con configuración del VideoBlot */}
+          <Box style={{ minHeight: '350px' }}>
+            <ReactQuill
+              ref={quillRef}
+              theme="snow"
+              value={getInputProps("content").value || ""}
+              onChange={(value) => setFieldValue("content", value)}
+              modules={modules}
+              formats={formats}
+              style={{ 
+                height: "300px", 
+                marginBottom: "40px",
+                backgroundColor: "white"
+              }}
+              placeholder="Escribe aquí tu contenido..."
+            />
+          </Box>
+          
           {errors.content && (
             <Text mt="xs" size="xs" color="red">
               {errors.content}
@@ -194,7 +312,7 @@ export const NewsEdit: React.FC = () => {
             fullWidth
             disabled={featuredImageFiles.length === 0}
             loading={loadingImage}
-            onClick={handleImageUpload}
+            onClick={handleFeaturedImageUpload}
           >
             Upload Featured Image
           </Button>
@@ -229,6 +347,7 @@ export const NewsEdit: React.FC = () => {
               "application/vnd.ms-excel",
               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
               "text/plain",
+              "video/*", // Agregamos soporte para videos
             ]}
           >
             <Group position="center" spacing="xl" style={{ minHeight: 80 }}>
@@ -240,7 +359,7 @@ export const NewsEdit: React.FC = () => {
                   </Text>
                 ) : (
                   <Text size="sm" color="dimmed">
-                    Arrastra o haz click para cargar documentos (PDF, Word, Excel, etc.)
+                    Arrastra o haz click para cargar documentos y videos
                   </Text>
                 )}
               </div>
@@ -253,13 +372,13 @@ export const NewsEdit: React.FC = () => {
             loading={docLoading}
             onClick={handleDocUpload}
           >
-            Subir Documentos
+            Subir Documentos/Videos
           </Button>
           {documents.length > 0 && (
             <Box mt="sm">
               <Text size="sm" weight={500}>Documentos cargados:</Text>
               {documents.map((doc) => (
-                <Group key={doc.id || doc.id || doc.url} spacing={8}>
+                <Group key={doc.id || doc.url} spacing={8}>
                   <Text size="sm">{doc.name}</Text>
                   <a href={doc.url} target="_blank" rel="noopener noreferrer">
                     <Text size="xs" color="blue">Ver</Text>
@@ -269,6 +388,7 @@ export const NewsEdit: React.FC = () => {
             </Box>
           )}
         </Box>
+
         {/* Campo oculto para documentos */}
         <input
           type="hidden"
