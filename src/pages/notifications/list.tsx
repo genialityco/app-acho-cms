@@ -22,7 +22,7 @@ import {
 } from "@mantine/core";
 import { ColumnFilter, ColumnSorter } from "../../components/table";
 import type { INotificationTemplate } from "../../interfaces";
-import { useNotification, useCreate, useList } from "@refinedev/core";
+import { useNotification, useCreate, useList, useUpdate } from "@refinedev/core";
 import { IconSend, IconUser } from "@tabler/icons-react";
 import { useDebouncedValue } from "@mantine/hooks";
 
@@ -136,6 +136,7 @@ const ActionButtons: React.FC<{
 }> = ({ recordId, isSent, title, body }) => {
   const { open } = useNotification();
   const { mutate: createNotification } = useCreate();
+  const { mutate } = useUpdate();
   const [modalOpened, setModalOpened] = useState(false);
   const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
@@ -398,6 +399,4 @@ const TableBody: React.FC<{
   </tbody>
 );
 
-function mutate(arg0: { resource: string; id: string; values: {}; }) {
-  throw new Error("Function not implemented.");
-}
+
