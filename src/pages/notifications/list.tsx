@@ -19,11 +19,12 @@ import {
   Button,
   Text,
   Loader,
+  Stack,
 } from "@mantine/core";
 import { ColumnFilter, ColumnSorter } from "../../components/table";
 import type { INotificationTemplate } from "../../interfaces";
 import { useNotification, useCreate, useList, useUpdate } from "@refinedev/core";
-import { IconSend, IconUser } from "@tabler/icons-react";
+import { IconSend, IconUser, IconAlertTriangle } from "@tabler/icons-react";
 import { useDebouncedValue } from "@mantine/hooks";
 
 // Error Boundary Component
@@ -138,12 +139,14 @@ const ActionButtons: React.FC<{
   const { mutate: createNotification } = useCreate();
   const { mutate } = useUpdate();
   const [modalOpened, setModalOpened] = useState(false);
+  const [confirmModalOpened, setConfirmModalOpened] = useState(false);
   const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const [debouncedSearch] = useDebouncedValue(searchValue, 300);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Fetch members based on search
-  const { data: membersData, refetch, isLoading, isError } = useList<{
+  const { data: membersData, refetch, isLoading: isFetching, isError } = useList<{
     _id: string;
     properties: { email: string };
     userId: { expoPushToken: string };
@@ -188,7 +191,8 @@ const ActionButtons: React.FC<{
       }));
   }, [membersData?.data]);
 
-  const handleSendNotification = async () => {
+  const handleConfirmSendNotification = async () => {
+    setIsLoading(true);
     try {
       await mutate({
         resource: "notifications/send-from-template",
@@ -199,7 +203,9 @@ const ActionButtons: React.FC<{
       open?.({
         type: "success",
         message: "Notification sent successfully",
+        description: "The notification has been sent to all recipients",
       });
+      setConfirmModalOpened(false);
     } catch (error: any) {
       console.error("Send notification error:", error);
       open?.({
@@ -207,7 +213,13 @@ const ActionButtons: React.FC<{
         message: "Error sending notification",
         description: error.message || "An error occurred",
       });
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const handleSendNotification = () => {
+    setConfirmModalOpened(true);
   };
 
   const handleSendIndividualNotification = async () => {
@@ -219,6 +231,7 @@ const ActionButtons: React.FC<{
       return;
     }
 
+    setIsLoading(true);
     try {
       // Find members corresponding to selected emails
       const selectedMembers = membersData?.data?.filter(member =>
@@ -263,6 +276,8 @@ const ActionButtons: React.FC<{
         message: "Error sending individual notification",
         description: error.message || "An error occurred",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -270,6 +285,10 @@ const ActionButtons: React.FC<{
     setModalOpened(false);
     setSelectedEmails([]);
     setSearchValue("");
+  };
+
+  const closeConfirmModal = () => {
+    setConfirmModalOpened(false);
   };
 
   return (
@@ -282,6 +301,7 @@ const ActionButtons: React.FC<{
             variant="default"
             onClick={handleSendNotification}
             title="Send Notification to All"
+            disabled={isLoading}
           >
             <IconSend />
           </ActionIcon>
@@ -290,12 +310,63 @@ const ActionButtons: React.FC<{
           variant="default"
           onClick={() => setModalOpened(true)}
           title="Send Individual Notification"
+          disabled={isLoading}
         >
           <IconUser />
         </ActionIcon>
         <DeleteButton hideText recordItemId={recordId} />
       </Group>
 
+      {/* Modal de confirmación para envío masivo */}
+      <Modal
+        opened={confirmModalOpened}
+        onClose={closeConfirmModal}
+        title="Confirm Send Notification"
+        centered
+        size="sm"
+      >
+        <Stack spacing="md">
+          <Group spacing="xs">
+            <IconAlertTriangle size={20} color="orange" />
+            <Text weight={500}>Confirm Action</Text>
+          </Group>
+          
+          <Text size="sm" color="dimmed">
+            Are you sure you want to send this notification to all recipients?
+          </Text>
+          
+          <Box p="sm" style={{ backgroundColor: '#f8f9fa', borderRadius: '4px' }}>
+            <Text size="sm" weight={500} mb="xs">Notification Details:</Text>
+            <Text size="sm"><strong>Title:</strong> {title}</Text>
+            <Text size="sm" style={{ wordBreak: 'break-word' }}>
+              <strong>Body:</strong> {body}
+            </Text>
+          </Box>
+          
+          <Text size="xs" color="red">
+            This action cannot be undone.
+          </Text>
+          
+          <Group position="right" spacing="sm" mt="md">
+            <Button 
+              variant="outline" 
+              onClick={closeConfirmModal}
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              color="blue"
+              onClick={handleConfirmSendNotification}
+              loading={isLoading}
+            >
+              {isLoading ? "Sending..." : "Send Notification"}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      {/* Modal para notificaciones individuales */}
       <Modal
         opened={modalOpened}
         onClose={closeModal}
@@ -323,8 +394,9 @@ const ActionButtons: React.FC<{
           }
           dropdownPosition="bottom"
           withinPortal
-          rightSection={isLoading ? <Loader size="xs" /> : null}
+          rightSection={isFetching ? <Loader size="xs" /> : null}
           error={isError ? "Error loading members" : null}
+          disabled={isLoading}
         />
         {selectedEmails.length > 0 && (
           <Text size="sm" color="dimmed" mb="md">
@@ -337,14 +409,22 @@ const ActionButtons: React.FC<{
           </Text>
         )}
         <Group position="right" spacing="sm">
-          <Button variant="outline" onClick={closeModal}>
+          <Button 
+            variant="outline" 
+            onClick={closeModal}
+            disabled={isLoading}
+          >
             Cancel
           </Button>
           <Button
             onClick={handleSendIndividualNotification}
             disabled={selectedEmails.length === 0 || isLoading}
+            loading={isLoading}
           >
-            Send to {selectedEmails.length} recipient(s)
+            {isLoading 
+              ? "Sending..." 
+              : `Send to ${selectedEmails.length} recipient(s)`
+            }
           </Button>
         </Group>
       </Modal>
@@ -398,5 +478,3 @@ const TableBody: React.FC<{
     ))}
   </tbody>
 );
-
-
