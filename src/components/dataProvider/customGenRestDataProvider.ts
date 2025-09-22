@@ -3,7 +3,7 @@ import dataProvider from "@refinedev/simple-rest";
 
 // const API_URL = "http://192.168.101.7:3000";
 const API_URL = "https://lobster-app-uy9hx.ondigitalocean.app"
-//const API_URL ="http://localhost:3000"; // URL del backend
+// const API_URL ="http://localhost:3000"; // URL del backend
 
 // Inicializa el dataProvider original de simple-rest
 const restProvider = dataProvider(API_URL);

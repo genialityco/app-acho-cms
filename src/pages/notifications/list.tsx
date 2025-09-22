@@ -149,9 +149,9 @@ const ActionButtons: React.FC<{
   const { data: membersData, refetch, isLoading: isFetching, isError } = useList<{
     _id: string;
     properties: { email: string };
-    userId: { expoPushToken: string };
+    user: { expoPushToken: string, _id: string } | null;
   }>({
-    resource: "members/search",
+    resource: "members/searchByEmail",
     queryOptions: { enabled: false },
     filters: debouncedSearch ? [
       {
@@ -161,7 +161,7 @@ const ActionButtons: React.FC<{
       },
     ] : [],
     pagination: {
-      pageSize: 50,
+      pageSize: 10,
     },
   });
 
@@ -184,7 +184,7 @@ const ActionButtons: React.FC<{
   const memberOptions = React.useMemo(() => {
     if (!membersData?.data) return [];
     return membersData.data
-      .filter(member => member.properties?.email && member.userId?.expoPushToken)
+      .filter(member => member.properties?.email && member.user?.expoPushToken)
       .map((member) => ({
         value: member.properties.email,
         label: member.properties.email,
@@ -235,7 +235,7 @@ const ActionButtons: React.FC<{
     try {
       // Find members corresponding to selected emails
       const selectedMembers = membersData?.data?.filter(member =>
-        selectedEmails.includes(member.properties.email) && member.userId?.expoPushToken
+        selectedEmails.includes(member.properties.email) && member.user?.expoPushToken
       ) || [];
       
       if (selectedMembers.length === 0) {
@@ -249,10 +249,10 @@ const ActionButtons: React.FC<{
       // Send notification for each selected member
       for (const member of selectedMembers) {
         const payload = {
-          expoPushToken: member.userId.expoPushToken,
+          expoPushToken: member.user?.expoPushToken,
           title: title || "Notification",
           body: body || "You have a new notification",
-          data: { userId: member.userId?._id || null },
+          data: { userId: member.user?._id || null },
           iconUrl: "",
         };
         

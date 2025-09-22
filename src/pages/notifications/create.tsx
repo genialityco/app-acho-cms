@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { Create, useForm } from "@refinedev/mantine";
 import { TextInput, Textarea, Box, Text } from "@mantine/core";
+import { DateTimePicker } from "@mantine/dates";
 import MDEditor from "@uiw/react-md-editor";
 
 export const NotificationTemplateCreate: React.FC = () => {
   const [dataError, setDataError] = useState<string | null>(null);
   const [bodyLength, setBodyLength] = useState(0); // Estado para contar caracteres del body
-
   const maxTitleLength = 50;
   const maxBodyLength = 250;
 
@@ -17,6 +17,7 @@ export const NotificationTemplateCreate: React.FC = () => {
       data: {},
       isSent: false,
       organizationId: "66f1d236ee78a23c67fada2a",
+      scheduledAt: null as Date | null, // Nuevo campo para la fecha programada
     },
     validate: {
       title: (value) => {
@@ -27,6 +28,12 @@ export const NotificationTemplateCreate: React.FC = () => {
       body: (value) => {
         if (value.length < 10) return "Body is too short";
         if (value.length > maxBodyLength) return `Body cannot exceed ${maxBodyLength} characters`;
+        return null;
+      },
+      scheduledAt: (value: Date | null) => {
+        if (value && value <= new Date()) {
+          return "Scheduled date must be in the future";
+        }
         return null;
       },
     },
@@ -46,6 +53,10 @@ export const NotificationTemplateCreate: React.FC = () => {
     } catch {
       setDataError("Invalid JSON format. Please correct the input.");
     }
+  };
+
+  const handleScheduledAtChange = (value: Date | null) => {
+    setFieldValue("scheduledAt", value);
   };
 
   return (
@@ -80,6 +91,18 @@ export const NotificationTemplateCreate: React.FC = () => {
             </Text>
           )}
         </Box>
+
+        {/* Fecha programada */}
+        <DateTimePicker
+          mt="sm"
+          label="Scheduled At"
+          placeholder="Select date and time for notification"
+          value={getInputProps("scheduledAt").value}
+          onChange={handleScheduledAtChange}
+          error={errors.scheduledAt}
+          minDate={new Date()} // No permite fechas pasadas
+          clearable
+          description="Select a future date/time to schedule" onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined}        />
 
         {/* Datos adicionales */}
         <Textarea
