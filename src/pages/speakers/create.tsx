@@ -137,7 +137,7 @@ export const SpeakerCreate: React.FC = () => {
           label="eventId"
           placeholder="6807d5a91c2e1e14b22da8b0"
           {...getInputProps("eventId")}
-          disabled
+          
         />
         <TextInput mt={8} label="Nombre Completo" placeholder="names" {...getInputProps("names")} />
         <Textarea mt={8} label="Descripción" placeholder="description" {...getInputProps("description")} />
