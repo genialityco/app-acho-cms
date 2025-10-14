@@ -21,9 +21,15 @@ import {
   Pagination,
   Image,
   Text,
+  ActionIcon,
+  Tooltip,
 } from "@mantine/core";
+import { IconEye, IconEyeOff } from "@tabler/icons-react"; // si no lo tienes: npm i @tabler/icons-react
+
 import { ColumnFilter, ColumnSorter } from "../../components/table";
 import type { INews } from "../../interfaces";
+import { useApiUrl, useInvalidate } from "@refinedev/core";
+import { customGenRestDataProvider } from "../../components/dataProvider/customGenRestDataProvider";
 
 export const NewsList: React.FC = () => {
   // Definición de columnas
@@ -56,11 +62,14 @@ export const NewsList: React.FC = () => {
       {
         id: "actions",
         header: "Actions",
-        accessorKey: "_id", 
+        accessorKey: "_id",
         enableColumnFilter: false,
         enableSorting: false,
-        cell: ({ getValue }) => (
-          <ActionButtons recordId={getValue() as string} />
+        cell: ({ getValue, row }) => (
+          <ActionButtons
+            recordId={getValue() as string}
+            isPublic={Boolean((row.original as INews).isPublic)}
+          />
         ),
       },
     ],
@@ -94,13 +103,57 @@ export const NewsList: React.FC = () => {
 };
 
 // Componente para los botones de acción
-const ActionButtons: React.FC<{ recordId: string }> = ({ recordId }) => (
-  <Group spacing="xs" noWrap>
-    <ShowButton hideText recordItemId={recordId} />
-    <EditButton hideText recordItemId={recordId} />
-    <DeleteButton hideText recordItemId={recordId} />
-  </Group>
-);
+const ActionButtons: React.FC<{ recordId: string; isPublic?: boolean }> = ({
+  recordId,
+  isPublic,
+}) => {
+  const invalidate = useInvalidate();
+  const apiUrl = useApiUrl();
+
+  const onToggle = async () => {
+    try {
+      const res = await fetch(`${apiUrl}/news/public/${recordId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        // ⚠️ si tu API usa cookies/sesión, agrega:
+        // credentials: "include",
+      });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(text || `HTTP ${res.status}`);
+      }
+      // Si la actualización fue exitosa
+      // puedes mostrar un mensaje de éxito aquí
+      console.log("Noticia actualizada con éxito");
+
+      // refresca la lista
+      await invalidate({ resource: "news", invalidates: ["list", "many"] });
+
+      // feedback (opcional)
+    } catch (e: any) {
+      console.error(e);
+    }
+  };
+
+  return (
+    <Group spacing="xs" noWrap>
+      <Tooltip label={isPublic ? "Pública" : "No pública"}>
+        <ActionIcon
+          variant="light"
+          color={isPublic ? "green" : "gray"}
+          aria-label={isPublic ? "Pública" : "No pública"}
+          onClick={onToggle} // ✅ aquí llamas /news/public/:id
+        >
+          {isPublic ? <IconEye size={18} /> : <IconEyeOff size={18} />}
+        </ActionIcon>
+      </Tooltip>
+      <ShowButton hideText recordItemId={recordId} />
+      <EditButton hideText recordItemId={recordId} />
+      <DeleteButton hideText recordItemId={recordId} />
+    </Group>
+  );
+};
 
 // Componente para el encabezado de la tabla
 const TableHeader: React.FC<{

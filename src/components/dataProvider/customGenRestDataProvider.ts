@@ -1,9 +1,9 @@
 import { DataProvider } from "@refinedev/core";
 import dataProvider from "@refinedev/simple-rest";
 
-// const API_URL = "http://192.168.101.7:3000";
+//const API_URL = "http://192.168.20.22:3000";
 const API_URL = "https://lobster-app-uy9hx.ondigitalocean.app"
-// const API_URL ="http://localhost:3000"; // URL del backend
+//const API_URL ="http://localhost:3000"; // URL del backend
 
 // Inicializa el dataProvider original de simple-rest
 const restProvider = dataProvider(API_URL);
@@ -19,25 +19,25 @@ export const customGenRestDataProvider: DataProvider = {
   getList: async ({ resource, pagination, filters, sorters }) => {
     try {
       const { current = 1, pageSize = 10 } = pagination ?? {};
-      
+
       // Crear URLSearchParams para manejar parámetros de manera ordenada
       const params = new URLSearchParams();
-      
+
       // Agregar paginación
-      params.append('pageSize', pageSize.toString());
-      params.append('current', current.toString());
+      params.append("pageSize", pageSize.toString());
+      params.append("current", current.toString());
 
       // 🔧 NUEVA IMPLEMENTACIÓN: Aplica filtros manteniendo la estructura de array
       if (filters && filters.length > 0) {
-        console.log('🔍 Procesando filtros:', filters); // Debug
-        
+        console.log("🔍 Procesando filtros:", filters); // Debug
+
         filters.forEach((filter, index) => {
           const { field, operator, value } = filter;
-          
+
           // Estructura: filters[index][campo] = valor
           params.append(`filters[${index}][field]`, field);
-          params.append(`filters[${index}][operator]`, operator || 'eq');
-          params.append(`filters[${index}][value]`, value?.toString() || '');
+          params.append(`filters[${index}][operator]`, operator || "eq");
+          params.append(`filters[${index}][value]`, value?.toString() || "");
         });
       }
 
@@ -50,16 +50,16 @@ export const customGenRestDataProvider: DataProvider = {
       }
 
       // 🐛 Debug: Ver qué parámetros se están enviando
-      console.log('📤 Parámetros enviados al backend:', params.toString());
+      console.log("📤 Parámetros enviados al backend:", params.toString());
 
       // Construir la URL final
       const url = `${API_URL}/${resource}?${params.toString()}`;
-      console.log('🌐 URL final:', url); // Debug
+      console.log("🌐 URL final:", url); // Debug
 
       const response = await fetch(url);
       const data = await response.json();
 
-      console.log('📥 Respuesta del backend:', data); // Debug
+      console.log("📥 Respuesta del backend:", data); // Debug
 
       // Retorna los datos y el total de ítems
       return {

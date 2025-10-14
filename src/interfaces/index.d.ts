@@ -69,6 +69,7 @@ export interface INews {
   featuredImage: string;
   createdAt: string;
   updatedAt: string;
+  isPublic?: boolean;
 }
 
 export interface IMember {
