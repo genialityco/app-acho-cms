@@ -4,8 +4,6 @@ import EditSessionsForm from "./editSessionsForm";
 import type { ICategory } from "../../interfaces";
 import { DateTimePicker } from "@mantine/dates";
 import dayjs from "dayjs";
-import { useEffect } from "react";
-import { parseISO } from "date-fns";
 
 export const AgendaEdit: React.FC = () => {
   const {
@@ -18,17 +16,19 @@ export const AgendaEdit: React.FC = () => {
   } = useForm({
     refineCoreProps: {
       redirect: false,
-      warnWhenUnsavedChanges: false,
     },
-    // Remueve o simplifica initialValues si usas useEffect
     initialValues: {
       _id: "",
-      eventId: { name: "" },
+      eventId: {
+        name: "",
+      },
       title: "",
       sessions: [],
-      startDate: "",
+      startDate: new Date().toString(),
       status: "",
-      category: { id: "" },
+      category: {
+        id: "",
+      },
       content: "",
     },
     transformValues: (values) => {
@@ -40,70 +40,24 @@ export const AgendaEdit: React.FC = () => {
       console.log("VALUES", values);
       return respuesta;
     },
-    // validate: {
-    //   title: (value) => (value.length < 2 ? "Too short title" : null),
-    //   status: (value) => (value.length <= 0 ? "Status is required" : null),
-    //   category: {
-    //     id: (value) => (value.length <= 0 ? "Category is required" : null),
-    //   },
-    //   content: (value) => (value.length < 10 ? "Too short content" : null),
-    // },
   });
-  useEffect(() => { console.log("valores a editar: ", values)}, [values]);
-
-  useEffect(() => {
-    if (queryResult?.data?.data) {
-      const data = queryResult.data.data;
-  
-      // 🔹 Campos simples
-      setFieldValue("_id", data._id || "");
-      setFieldValue("title", data.title || "");
-      setFieldValue("room", data.room || "");
-  
-      // 🔹 Fechas (si tu formulario espera objetos Date)
-      setFieldValue(
-        "startDateTime",
-        data.startDateTime ? new Date(data.startDateTime) : null
-      );
-      setFieldValue(
-        "endDateTime",
-        data.endDateTime ? new Date(data.endDateTime) : null
-      );
-  
-      // 🔹 Speakers: se mapean a solo los campos que uses en tu formulario
-      const mappedSpeakers = (data.speakers || []).map((sp: any) => ({
-        _id: sp._id,
-        names: sp.names,
-        description: sp.description,
-        location: sp.location,
-        isInternational: sp.isInternational,
-        imageUrl: sp.imageUrl,
-      }));
-      setFieldValue("speakers", mappedSpeakers);
-  
-      // 🔹 ModuleId: puedes guardar solo el id o el objeto entero
-      setFieldValue("moduleId", data.moduleId?._id || data.moduleId);
-  
-      // 🔹 Si necesitas el objeto completo del módulo
-      // setFieldValue("module", data.moduleId || null);
-    }
-  }, [queryResult?.data, setFieldValue]);
-  // Se ejecuta cada vez que los datos de la API cambian
-
 
   // Function to add a new session to the array
   const addSession = () => {
     const newSession = {
       //_id: generateFirebaseId(),
       title: "",
-      startDateTime: "2024-09-27T18:10:00.000Z",
-      endDateTime: "2024-09-27T18:10:00.000Z",
+      startDateTime: "2025-11-14T18:10:00.000Z",
+      endDateTime: "2025-11-14T18:10:00.000Z",
       speakers: [],
       room: "",
       moduleId: null,
     };
 
-    setFieldValue("sessions", [...values.sessions, newSession]);
+    // Add session without sorting
+    const updatedSessions = [...values.sessions, newSession];
+
+    setFieldValue("sessions", updatedSessions);
   };
 
   // Function to remove a session by index
@@ -144,7 +98,20 @@ export const AgendaEdit: React.FC = () => {
       pageSize: 1000,
       current:1,
       mode: "server",
-    },    
+    },
+    
+    // Filter speakers by eventId
+    filters: [
+      {
+        field: "eventId",
+        operator: "eq",
+        value: values?.eventId?._id || queryResult?.data?.data?.eventId?._id,
+      },
+    ],
+    
+    queryOptions: {
+      enabled: !!(values?.eventId?._id || queryResult?.data?.data?.eventId?._id), // Only fetch when eventId exists
+    },
     //defaultValue: values?.categories.map(category => category.id), // pre-select related categories
   });
 
@@ -155,21 +122,6 @@ export const AgendaEdit: React.FC = () => {
     optionValue: "_id", // property to use as value
     //defaultValue: values?.categories.map(category => category.id), // pre-select related categories
   });
-
-  const toUTCDate = (date: Date | null) => {
-    if (!date) return null;
-    return new Date(
-      Date.UTC(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate(),
-        date.getHours(),
-        date.getMinutes(),
-        date.getSeconds(),
-        date.getMilliseconds()
-      )
-    );
-  };
 
   return (
     <Edit saveButtonProps={saveButtonProps}>
@@ -183,26 +135,13 @@ export const AgendaEdit: React.FC = () => {
 
         {<TextInput type="hidden" mt={8} label="" placeholder="title" {...getInputProps("title")} value="{queryResult?.data?.data?.eventId?.name}"/>}
 
-        {/*
-        <Text mt={8} weight={500} size="sm" color="#212529">
-          Content
-        </Text>
-        <MDEditor data-color-mode="light" {...getInputProps("content")} />
-        {errors.content && (
-          <Text mt={2} size="xs" color="red">
-            {errors.content}
-          </Text>
-        )} */}
-
         <Stack spacing="md">
           {values.sessions.map((session, index) => (
             <Stack
-              key={session._id}
+              key={index}
               spacing="sm"
               sx={{ padding: "1rem", border: "1px solid #ddd", borderRadius: "8px" }}
             >
-
-            
               <Group grow style={{ alignItems: "flex-end" }}>
                 <DateTimePicker
                   style={{ maxWidth: "160px" }}
@@ -211,10 +150,10 @@ export const AgendaEdit: React.FC = () => {
                   {...getInputProps(`sessions.${index}.startDateTime`)}
                   value={
                     getInputProps(`sessions.${index}.startDateTime`).value
-                      ? parseISO(getInputProps(`sessions.${index}.startDateTime`).value)
+                      ? dayjs(getInputProps(`sessions.${index}.startDateTime`).value).toDate()
                       : null
-                  } // Format date correctly
-                  onChange={(value) => getInputProps(`sessions.${index}.startDateTime`).onChange(toUTCDate(value))} // Ensure change updates value
+                  }
+                  onChange={(value) => getInputProps(`sessions.${index}.startDateTime`).onChange(value)}
                   required
                 />
 
@@ -225,10 +164,10 @@ export const AgendaEdit: React.FC = () => {
                   {...getInputProps(`sessions.${index}.endDateTime`)}
                   value={
                     getInputProps(`sessions.${index}.endDateTime`).value
-                      ? parseISO(getInputProps(`sessions.${index}.endDateTime`).value)
+                      ? dayjs(getInputProps(`sessions.${index}.endDateTime`).value).toDate()
                       : null
-                  } // Format date correctly
-                  onChange={(value) => getInputProps(`sessions.${index}.endDateTime`).onChange(toUTCDate(value))} // Ensure change updates value
+                  }
+                  onChange={(value) => getInputProps(`sessions.${index}.endDateTime`).onChange(value)}
                 />
 
                 <TextInput
@@ -244,8 +183,6 @@ export const AgendaEdit: React.FC = () => {
               </Group>
 
               <Group>
-                {/* Speakers for each session */}
-
                 {values?.sessions[index]?.speakers &&
                   values?.sessions[index]?.speakers.map((speaker, speakerIndex) => (
                     <div
@@ -259,10 +196,8 @@ export const AgendaEdit: React.FC = () => {
                         {...getInputProps(`sessions.${index}.speakers.${speakerIndex}._id`)}
                         data={speakerSelectProps.data}
                         searchable={true}
-                        //onSearchChange={(search)=>console.log('buscandooo',search)}
+                        onSearchChange={(search)=>console.log('buscandooo',search)}
                         filterDataOnExactSearchMatch={false}
-
-                        
                       />
                       <Button
                         style={{ backgroundColor: "rgba(200,150,150,0.7)" }}
@@ -280,20 +215,14 @@ export const AgendaEdit: React.FC = () => {
               <Group grow>
                 <TextInput label="Room" placeholder="Enter Room" {...getInputProps(`sessions.${index}.room`)} />
 
-                {/* Had troubles with this moduleId Field
-                  from the API It cames hydratated (full related object)
-                  and for some reason getInputProps is not being able to select the apropiate value
-                  has to made It manually, and setting the value to only the moduleId String instead
-                  of the object, if posible It requieres some improvement     
-                  */}
                 <Select
-                label="Modulo"
-                placeholder="Pick one"
-                {...getInputProps(`sessions.${index}.moduleId?._id`)}
-                {...moduleSelectProps}
-                value = {session['moduleId']?._id ?? session['moduleId'] ?? null}
-                onChange={(value) => getInputProps(`sessions.${index}.moduleId`).onChange(value)}
-              />
+                  label="Modulo"
+                  placeholder="Pick one"
+                  {...getInputProps(`sessions.${index}.moduleId?._id`)}
+                  {...moduleSelectProps}
+                  value = {session['moduleId']?._id ?? session['moduleId'] ?? null}
+                  onChange={(value) => getInputProps(`sessions.${index}.moduleId`).onChange(value)}
+                />
               </Group>
             </Stack>
           ))}
