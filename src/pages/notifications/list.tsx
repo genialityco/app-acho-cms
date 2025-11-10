@@ -252,7 +252,7 @@ const ActionButtons: React.FC<{
           expoPushToken: member.user?.expoPushToken,
           title: title || "Notification",
           body: body || "You have a new notification",
-          data: { userId: member.user?._id || null },
+          data: { userId: member.user?._id || null, recordId: recordId },
           iconUrl: "",
         };
         
