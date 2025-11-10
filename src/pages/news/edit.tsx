@@ -9,6 +9,7 @@ import axios from "axios";
 import { Dropzone as DocDropzone } from "@mantine/dropzone";
 import { v4 as uuidv4 } from "uuid";
 import { getQuillConfig, useQuillVideoHandlers } from "../../components/quill";
+import { DateTimePicker } from "@mantine/dates";
 
 // Importar el VideoBlot y los helpers
 
@@ -18,6 +19,7 @@ export const NewsEdit: React.FC = () => {
   const [loadingVideo, setLoadingVideo] = useState(false);
   const [featuredImageFiles, setFeaturedImageFiles] = useState<File[]>([]);
   const [docFiles, setDocFiles] = useState<File[]>([]);
+  const [hasScheduledAt, setHasScheduledAt] = useState(false);
   const [docLoading, setDocLoading] = useState(false);
   const [documents, setDocuments] = useState<
     { id: string; name: string; type: string; url: string }[]
@@ -68,6 +70,7 @@ export const NewsEdit: React.FC = () => {
         content,
         organizationId,
         featuredImage,
+        scheduledAt,
         documents: docsFromApi,
       } = queryResult.data.data;
       setFieldValue("title", title || "");
@@ -77,6 +80,10 @@ export const NewsEdit: React.FC = () => {
       const initialDocuments = Array.isArray(docsFromApi) ? docsFromApi : [];
       setFieldValue("documents", initialDocuments);
       setDocuments(initialDocuments);
+      if (scheduledAt) {
+        setHasScheduledAt(true);
+        setFieldValue("scheduledAt", new Date(scheduledAt));
+      }
     }
   }, [queryResult?.data?.data, setFieldValue]);
 
@@ -193,6 +200,10 @@ export const NewsEdit: React.FC = () => {
     setFieldValue("documents", newDocs);
   };
 
+  const handleScheduledAtChange = (value: Date | null) => {
+    setFieldValue("scheduledAt", value);
+  };
+
   return (
     <Edit saveButtonProps={saveButtonProps}>
       <form>
@@ -272,6 +283,22 @@ export const NewsEdit: React.FC = () => {
               {errors.content}
             </Text>
           )}
+           {/* Fecha programada - Solo mostrar si existe en los datos originales */}
+                  {hasScheduledAt && (
+                    <DateTimePicker
+                      mt="sm"
+                      label="Scheduled At"
+                      placeholder="Select date and time for notification"
+                      value={getInputProps("scheduledAt").value}
+                      onChange={handleScheduledAtChange}
+                      error={errors.scheduledAt}
+                      minDate={new Date()} // No permite fechas pasadas
+                      clearable
+                      description="Leave empty to send immediately, or select a future date/time to schedule"
+                      onPointerEnterCapture={undefined} 
+                      onPointerLeaveCapture={undefined}
+                    />
+                  )}
         </Box>
 
         {/* Imagen destacada */}

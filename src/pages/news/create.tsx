@@ -15,6 +15,7 @@ import axios from "axios";
 import { Dropzone as DocDropzone } from "@mantine/dropzone";
 import { v4 as uuidv4 } from "uuid";
 import { getQuillConfig, useQuillVideoHandlers } from "../../components/quill"; // Asegúrate de que la ruta sea correcta
+import { DateTimePicker } from "@mantine/dates";
 
 export const NewsCreate: React.FC = () => {
   const [loadingImage, setLoadingImage] = useState(false);
@@ -46,11 +47,18 @@ export const NewsCreate: React.FC = () => {
       content: "",
       organizationId: "66f1d236ee78a23c67fada2a",
       featuredImage: "",
+      scheduledAt: null as Date | null,
       documents: [],
     },
     validate: {
       title: (value) => (value.length < 3 ? "Title is too short" : null),
       content: (value) => (value.length < 10 ? "Content is too short" : null),
+      scheduledAt: (value: Date | null) => {
+        if (value && value <= new Date()) {
+          return "Scheduled date must be in the future";
+        }
+        return null;
+      },
     },
   });
 
@@ -169,6 +177,10 @@ export const NewsCreate: React.FC = () => {
     setFieldValue("documents", [...documents, ...uploadedDocs]);
   };
 
+  const handleScheduledAtChange = (value: Date | null) => {
+    setFieldValue("scheduledAt", value);
+  };
+
   return (
     <Create saveButtonProps={saveButtonProps}>
       <form>
@@ -249,6 +261,19 @@ export const NewsCreate: React.FC = () => {
             </Text>
           )}
         </Box>
+          {/* Fecha programada */}
+                <DateTimePicker
+                 mt="sm"
+                 label="Scheduled At"
+                 placeholder="Select date and time for notification"
+                 value={getInputProps("scheduledAt").value}
+                 onChange={handleScheduledAtChange}
+                 error={errors.scheduledAt}
+                 minDate={new Date()} // No permite fechas pasadas
+                 clearable
+                 description="Select a future date/time to schedule" onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined}        />
+       
+        
 
         {/* Imagen destacada */}
         <Box mt="sm">
