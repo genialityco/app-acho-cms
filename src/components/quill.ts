@@ -6,13 +6,15 @@ const BlockEmbed = Quill.import('blots/block/embed');
 
 class VideoBlot extends BlockEmbed {
   static blotName = 'video';
-  static tagName = 'iframe';
+  static tagName = 'video';
 
   static create(value: { url: any; width: any; height: any; }) {
     let node = super.create();
     node.setAttribute('src', value.url);
-    node.setAttribute('frameborder', '0');
-    node.setAttribute('allowfullscreen', true);
+    node.autoplay = true;
+    node.muted = true;
+    node.playsInline = true;
+    node.loop = true;
     node.setAttribute('width', value.width || '100%');
     node.setAttribute('height', value.height || '315');
     node.style.maxWidth = '100%';
