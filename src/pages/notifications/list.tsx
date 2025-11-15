@@ -81,6 +81,15 @@ export const NotificationTemplateList: React.FC = () => {
         ),
         enableColumnFilter: false,
       },
+       {
+        id: "scheduledAt",
+        header: "Scheduled At",
+        accessorKey: "scheduledAt",
+        cell: ({ getValue }) => (
+          <span>{new Date(getValue() as string).toLocaleString()}</span>
+        ),
+        enableColumnFilter: false,
+      },
       {
         id: "actions",
         header: "Actions",
