@@ -10,6 +10,7 @@ import {
   Button,
   Tabs,
   Table,
+  Select,
 } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 import { Dropzone, IMAGE_MIME_TYPE } from "@mantine/dropzone";
@@ -20,7 +21,8 @@ import { useCustom, useList, useOne } from "@refinedev/core";
 import { IAgenda } from "../../interfaces";
 import { AgendaEdit } from "../agendas";
 import { parseISO, formatISO } from "date-fns";
-import { useParams } from "react-router-dom"; // Add useParams to get ID from route
+import { useParams } from "react-router-dom";
+import { EVENT_TYPE_LABELS } from "../../types/eventTypes";
 
 export const EventEdit: React.FC = () => {
   const [loadingEventImage, setLoadingEventImage] = useState(false);
@@ -37,11 +39,12 @@ export const EventEdit: React.FC = () => {
       refineCoreProps: {
         resource: "events",
         action: "edit",
-        id, // Use ID from useParams
+        id,
       },
       initialValues: {
         name: "",
         description: "",
+        type: "CONGRESO",
         startDate: null,
         endDate: null,
         location: {
@@ -70,7 +73,7 @@ export const EventEdit: React.FC = () => {
         endDate: (value) => (!value ? "End date is required" : null),
       },
       transformValues: (values) => {
-        console.log("Transformed values:", values); // Debug transformed values
+        console.log("Transformed values:", values);
         return {
           ...values,
           startDate: values.startDate
@@ -120,6 +123,7 @@ export const EventEdit: React.FC = () => {
       const {
         name,
         description,
+        type,
         startDate,
         endDate,
         location,
@@ -140,6 +144,7 @@ export const EventEdit: React.FC = () => {
       // Set all fields explicitly
       setFieldValue("name", name || "");
       setFieldValue("description", description || "");
+      setFieldValue("type", type || "CONGRESO");
       setFieldValue("startDate", parsedStartDate);
       setFieldValue("endDate", parsedEndDate);
       setFieldValue("location.address", location?.address || "");
@@ -216,6 +221,12 @@ export const EventEdit: React.FC = () => {
     }
   };
 
+  // Convertir EVENT_TYPE_LABELS a formato de opciones para Select
+  const eventTypeOptions = Object.entries(EVENT_TYPE_LABELS).map(([value, label]) => ({
+    value,
+    label,
+  }));
+
   return (
     <Edit saveButtonProps={saveButtonProps}>
       <form>
@@ -226,6 +237,16 @@ export const EventEdit: React.FC = () => {
           {...getInputProps("name")}
           error={errors.name}
         />
+
+        {/* Tipo de evento */}
+        <Select
+          mt="sm"
+          label="Event Type"
+          placeholder="Select event type"
+          data={eventTypeOptions}
+          {...getInputProps("type")}
+        />
+
         <Box mt="sm">
           <Text weight={500} size="sm" color="gray.700">
             Description
@@ -239,7 +260,7 @@ export const EventEdit: React.FC = () => {
             {...getInputProps("startDate")}
             onChange={(value) => {
               const utcDate = toUTCDate(value);
-              console.log("Selected startDate:", value, "UTC:", utcDate); // Debug selection
+              console.log("Selected startDate:", value, "UTC:", utcDate);
               setFieldValue("startDate", utcDate);
             }}
             label="Start Date and Time"
@@ -257,7 +278,7 @@ export const EventEdit: React.FC = () => {
             {...getInputProps("endDate")}
             onChange={(value) => {
               const utcDate = toUTCDate(value);
-              console.log("Selected endDate:", value, "UTC:", utcDate); // Debug selection
+              console.log("Selected endDate:", value, "UTC:", utcDate);
               setFieldValue("endDate", utcDate);
             }}
             label="End Date and Time"

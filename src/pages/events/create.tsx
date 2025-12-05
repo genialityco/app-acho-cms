@@ -8,23 +8,27 @@ import {
   Group,
   Switch,
   Button,
+  Select,
 } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 import { Dropzone, IMAGE_MIME_TYPE } from "@mantine/dropzone";
 import { IconUpload, IconPhoto, IconX } from "@tabler/icons-react";
 import axios from "axios";
 import MDEditor from "@uiw/react-md-editor";
+import { EVENT_TYPE_LABELS } from "../../types/eventTypes";
 
 export const EventCreate: React.FC = () => {
   const [loadingEventImage, setLoadingEventImage] = useState(false);
   const [loadingMiniatureImage, setLoadingMiniatureImage] = useState(false);
   const [eventFiles, setEventFiles] = useState<File[]>([]);
   const [miniatureFiles, setMiniatureFiles] = useState<File[]>([]);
+  
 
   const { saveButtonProps, getInputProps, setFieldValue, errors } = useForm({
     initialValues: {
       name: "",
       description: "",
+      type: "CONGRESO",
       organizationId: "66f1d236ee78a23c67fada2a",
       startDate: null,
       endDate: null,
@@ -89,6 +93,12 @@ export const EventCreate: React.FC = () => {
     }
   };
 
+  // Convertir EVENT_TYPE_LABELS a formato de opciones para Select
+  const eventTypeOptions = Object.entries(EVENT_TYPE_LABELS).map(([value, label]) => ({
+    value,
+    label,
+  }));
+
   return (
     <Create saveButtonProps={saveButtonProps}>
       <form>
@@ -99,6 +109,15 @@ export const EventCreate: React.FC = () => {
           placeholder="Enter event name"
           {...getInputProps("name")}
           error={errors.name}
+        />
+
+        {/* Tipo de evento */}
+        <Select
+          mt="sm"
+          label="Event Type"
+          placeholder="Select event type"
+          data={eventTypeOptions}
+          {...getInputProps("type")}
         />
 
         {/* Descripción */}
