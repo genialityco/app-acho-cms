@@ -13,7 +13,6 @@ import { DateTimePicker } from "@mantine/dates";
 
 // Importar el VideoBlot y los helpers
 
-
 export const NewsEdit: React.FC = () => {
   const [loadingImage, setLoadingImage] = useState(false);
   const [loadingVideo, setLoadingVideo] = useState(false);
@@ -24,7 +23,7 @@ export const NewsEdit: React.FC = () => {
   const [documents, setDocuments] = useState<
     { id: string; name: string; type: string; url: string }[]
   >([]);
-  
+
   // Ref para ReactQuill
   const quillRef = useRef<ReactQuill>(null);
 
@@ -54,7 +53,14 @@ export const NewsEdit: React.FC = () => {
       content: "",
       organizationId: "",
       featuredImage: "",
-      documents: [] as { id: string; name: string; type: string; url: string }[],
+      scheduledAt: null as Date | null,
+      publishedAt: null as Date | null,
+      documents: [] as {
+        id: string;
+        name: string;
+        type: string;
+        url: string;
+      }[],
     },
     validate: {
       title: (value) => (value.length < 3 ? "Title is too short" : null),
@@ -71,6 +77,7 @@ export const NewsEdit: React.FC = () => {
         organizationId,
         featuredImage,
         scheduledAt,
+        publishedAt,
         documents: docsFromApi,
       } = queryResult.data.data;
       setFieldValue("title", title || "");
@@ -84,6 +91,11 @@ export const NewsEdit: React.FC = () => {
         setHasScheduledAt(true);
         setFieldValue("scheduledAt", new Date(scheduledAt));
       }
+      if (publishedAt) {
+        setFieldValue("publishedAt", new Date(publishedAt));
+      } else {
+        setFieldValue("publishedAt", null);
+      }
     }
   }, [queryResult?.data?.data, setFieldValue]);
 
@@ -93,11 +105,11 @@ export const NewsEdit: React.FC = () => {
       setLoadingImage(true);
       await insertImageFromFile(
         "https://lobster-app-uy9hx.ondigitalocean.app/upload/image",
-        { 'Content-Type': 'multipart/form-data' }
+        { "Content-Type": "multipart/form-data" }
       );
     } catch (error) {
-      console.error('Error uploading image:', error);
-      alert('Failed to upload the image.');
+      console.error("Error uploading image:", error);
+      alert("Failed to upload the image.");
     } finally {
       setLoadingImage(false);
     }
@@ -108,22 +120,22 @@ export const NewsEdit: React.FC = () => {
       setLoadingVideo(true);
       await insertVideoFromFile(
         "https://lobster-app-uy9hx.ondigitalocean.app/upload/document",
-        { 'Content-Type': 'multipart/form-data' }
+        { "Content-Type": "multipart/form-data" }
       );
     } catch (error) {
-      console.error('Error uploading video:', error);
-      alert('Failed to upload the video.');
+      console.error("Error uploading video:", error);
+      alert("Failed to upload the video.");
     } finally {
       setLoadingVideo(false);
     }
   };
 
   const handleImageUrlInEditor = () => {
-    insertImageFromUrl('Ingresa la URL de la imagen:');
+    insertImageFromUrl("Ingresa la URL de la imagen:");
   };
 
   const handleVideoUrlInEditor = () => {
-    insertVideoFromUrl('Ingresa la URL del video (YouTube, Vimeo, etc.):');
+    insertVideoFromUrl("Ingresa la URL del video (YouTube, Vimeo, etc.):");
   };
 
   // Manejar la carga de imágenes destacadas
@@ -167,12 +179,19 @@ export const NewsEdit: React.FC = () => {
     }
 
     setDocLoading(true);
-    const uploadedDocs: { id: string; name: string; type: string; url: string }[] = [];
+    const uploadedDocs: {
+      id: string;
+      name: string;
+      type: string;
+      url: string;
+    }[] = [];
 
     for (const file of docFiles) {
       const formData = new FormData();
       const sanitizedFileName = sanitizeFileName(file.name);
-      const sanitizedFile = new File([file], sanitizedFileName, { type: file.type });
+      const sanitizedFile = new File([file], sanitizedFileName, {
+        type: file.type,
+      });
       formData.append("file", sanitizedFile);
 
       try {
@@ -185,7 +204,10 @@ export const NewsEdit: React.FC = () => {
           id: uuidv4(),
           name: sanitizedFileName,
           type: file.type,
-          url: response.data.url || response.data.documentUrl || response.data.imageUrl,
+          url:
+            response.data.url ||
+            response.data.documentUrl ||
+            response.data.imageUrl,
         });
       } catch (error) {
         console.error("Error uploading document:", error);
@@ -202,6 +224,10 @@ export const NewsEdit: React.FC = () => {
 
   const handleScheduledAtChange = (value: Date | null) => {
     setFieldValue("scheduledAt", value);
+  };
+
+  const handlePublishedAtChange = (value: Date | null) => {
+    setFieldValue("publishedAt", value);
   };
 
   return (
@@ -221,7 +247,7 @@ export const NewsEdit: React.FC = () => {
           <Text weight={500} size="sm" color="gray.700">
             Content
           </Text>
-          
+
           {/* Botones para insertar media en el editor */}
           <Group spacing="xs" mb="sm">
             <Button
@@ -261,7 +287,7 @@ export const NewsEdit: React.FC = () => {
           </Group>
 
           {/* ReactQuill con configuración del VideoBlot */}
-          <Box style={{ minHeight: '350px' }}>
+          <Box style={{ minHeight: "350px" }}>
             <ReactQuill
               ref={quillRef}
               theme="snow"
@@ -269,36 +295,49 @@ export const NewsEdit: React.FC = () => {
               onChange={(value) => setFieldValue("content", value)}
               modules={modules}
               formats={formats}
-              style={{ 
-                height: "300px", 
+              style={{
+                height: "300px",
                 marginBottom: "40px",
-                backgroundColor: "white"
+                backgroundColor: "white",
               }}
               placeholder="Escribe aquí tu contenido..."
             />
           </Box>
-          
+
           {errors.content && (
             <Text mt="xs" size="xs" color="red">
               {errors.content}
             </Text>
           )}
-           {/* Fecha programada - Solo mostrar si existe en los datos originales */}
-                  {hasScheduledAt && (
-                    <DateTimePicker
-                      mt="sm"
-                      label="Scheduled At"
-                      placeholder="Select date and time for notification"
-                      value={getInputProps("scheduledAt").value}
-                      onChange={handleScheduledAtChange}
-                      error={errors.scheduledAt}
-                      minDate={new Date()} // No permite fechas pasadas
-                      clearable
-                      description="Leave empty to send immediately, or select a future date/time to schedule"
-                      onPointerEnterCapture={undefined} 
-                      onPointerLeaveCapture={undefined}
-                    />
-                  )}
+          {/* Fecha programada - Solo mostrar si existe en los datos originales */}
+          {hasScheduledAt && (
+            <DateTimePicker
+              mt="sm"
+              label="Scheduled At"
+              placeholder="Select date and time for notification"
+              value={getInputProps("scheduledAt").value}
+              onChange={handleScheduledAtChange}
+              error={errors.scheduledAt}
+              minDate={new Date()} // No permite fechas pasadas
+              clearable
+              description="Leave empty to send immediately, or select a future date/time to schedule"
+              onPointerEnterCapture={undefined}
+              onPointerLeaveCapture={undefined}
+            />
+          )}
+
+          <DateTimePicker
+            mt="sm"
+            label="Fecha de publicación"
+            placeholder="Selecciona fecha y hora de publicación"
+            value={getInputProps("publishedAt").value}
+            onChange={handlePublishedAtChange}
+            error={errors.publishedAt}
+            clearable
+            description="Define cuándo debe quedar visible/publicada la noticia"
+            onPointerEnterCapture={undefined}
+            onPointerLeaveCapture={undefined}
+          />
         </Box>
 
         {/* Imagen destacada */}
@@ -403,12 +442,16 @@ export const NewsEdit: React.FC = () => {
           </Button>
           {documents.length > 0 && (
             <Box mt="sm">
-              <Text size="sm" weight={500}>Documentos cargados:</Text>
+              <Text size="sm" weight={500}>
+                Documentos cargados:
+              </Text>
               {documents.map((doc) => (
                 <Group key={doc.id || doc.url} spacing={8}>
                   <Text size="sm">{doc.name}</Text>
                   <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                    <Text size="xs" color="blue">Ver</Text>
+                    <Text size="xs" color="blue">
+                      Ver
+                    </Text>
                   </a>
                 </Group>
               ))}

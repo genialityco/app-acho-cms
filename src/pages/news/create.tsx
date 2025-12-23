@@ -1,12 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Create, useForm } from "@refinedev/mantine";
-import {
-  TextInput,
-  Text,
-  Box,
-  Group,
-  Button,
-} from "@mantine/core";
+import { TextInput, Text, Box, Group, Button } from "@mantine/core";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { Dropzone, IMAGE_MIME_TYPE } from "@mantine/dropzone";
@@ -48,6 +42,7 @@ export const NewsCreate: React.FC = () => {
       organizationId: "66f1d236ee78a23c67fada2a",
       featuredImage: "",
       scheduledAt: null as Date | null,
+      publishedAt: null as Date | null,
       documents: [],
     },
     validate: {
@@ -57,6 +52,9 @@ export const NewsCreate: React.FC = () => {
         if (value && value <= new Date()) {
           return "Scheduled date must be in the future";
         }
+        return null;
+      },
+      publishedAt: (value: Date | null) => {
         return null;
       },
     },
@@ -145,12 +143,19 @@ export const NewsCreate: React.FC = () => {
     }
 
     setDocLoading(true);
-    const uploadedDocs: { id: string; name: string; type: string; url: string }[] = [];
+    const uploadedDocs: {
+      id: string;
+      name: string;
+      type: string;
+      url: string;
+    }[] = [];
 
     for (const file of docFiles) {
       const formData = new FormData();
       const sanitizedFileName = sanitizeFileName(file.name);
-      const sanitizedFile = new File([file], sanitizedFileName, { type: file.type });
+      const sanitizedFile = new File([file], sanitizedFileName, {
+        type: file.type,
+      });
       formData.append("file", sanitizedFile);
 
       try {
@@ -163,7 +168,10 @@ export const NewsCreate: React.FC = () => {
           id: uuidv4(),
           name: sanitizedFileName,
           type: file.type,
-          url: response.data.url || response.data.documentUrl || response.data.imageUrl,
+          url:
+            response.data.url ||
+            response.data.documentUrl ||
+            response.data.imageUrl,
         });
       } catch (error) {
         console.error("Error uploading document:", error);
@@ -179,6 +187,10 @@ export const NewsCreate: React.FC = () => {
 
   const handleScheduledAtChange = (value: Date | null) => {
     setFieldValue("scheduledAt", value);
+  };
+
+  const handlePublishedAtChange = (value: Date | null) => {
+    setFieldValue("publishedAt", value);
   };
 
   return (
@@ -261,19 +273,31 @@ export const NewsCreate: React.FC = () => {
             </Text>
           )}
         </Box>
-          {/* Fecha programada */}
-                <DateTimePicker
-                 mt="sm"
-                 label="Scheduled At"
-                 placeholder="Select date and time for notification"
-                 value={getInputProps("scheduledAt").value}
-                 onChange={handleScheduledAtChange}
-                 error={errors.scheduledAt}
-                 minDate={new Date()} // No permite fechas pasadas
-                 clearable
-                 description="Select a future date/time to schedule" onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined}        />
-       
-        
+        {/* Fecha programada */}
+        <DateTimePicker
+          mt="sm"
+          label="Scheduled At"
+          placeholder="Select date and time for notification"
+          value={getInputProps("scheduledAt").value}
+          onChange={handleScheduledAtChange}
+          error={errors.scheduledAt}
+          minDate={new Date()} // No permite fechas pasadas
+          clearable
+          description="Select a future date/time to schedule"
+          onPointerEnterCapture={undefined}
+          onPointerLeaveCapture={undefined}
+        />
+
+        <DateTimePicker
+          mt="sm"
+          label="Fecha de publicación"
+          placeholder="Selecciona fecha y hora de publicación"
+          value={getInputProps("publishedAt").value}
+          onChange={handlePublishedAtChange}
+          error={errors.publishedAt}
+          clearable
+          description="Define cuándo debe quedar visible/publicada la noticia"
+        />
 
         {/* Imagen destacada */}
         <Box mt="sm">
@@ -377,12 +401,16 @@ export const NewsCreate: React.FC = () => {
           </Button>
           {documents.length > 0 && (
             <Box mt="sm">
-              <Text size="sm" weight={500}>Documentos cargados:</Text>
+              <Text size="sm" weight={500}>
+                Documentos cargados:
+              </Text>
               {documents.map((doc) => (
                 <Group key={doc.id} spacing={8}>
                   <Text size="sm">{doc.name}</Text>
                   <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                    <Text size="xs" color="blue">Ver</Text>
+                    <Text size="xs" color="blue">
+                      Ver
+                    </Text>
                   </a>
                 </Group>
               ))}
