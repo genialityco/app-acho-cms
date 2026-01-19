@@ -1,8 +1,8 @@
 import { DataProvider } from "@refinedev/core";
 import dataProvider from "@refinedev/simple-rest";
 
-//const API_URL = "http://192.168.20.22:3000";
-const API_URL = "https://lobster-app-uy9hx.ondigitalocean.app"
+const API_URL = "http://192.168.40.23:3000";
+//const API_URL = "https://lobster-app-uy9hx.ondigitalocean.app"
 //const API_URL ="http://localhost:3000"; // URL del backend
 
 // Inicializa el dataProvider original de simple-rest

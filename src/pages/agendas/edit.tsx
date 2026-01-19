@@ -52,6 +52,7 @@ export const AgendaEdit: React.FC = () => {
       speakers: [],
       room: "",
       moduleId: null,
+      featured: false, //
     };
 
     // Add session without sorting
@@ -71,7 +72,9 @@ export const AgendaEdit: React.FC = () => {
   // Function to remove a speaker by index
   const removeSpeaker = (indexSession, indexSpeaker) => {
     console.log("removespeaker", indexSession, indexSpeaker);
-    const updatedSpeakers = values.sessions[indexSession].speakers.filter((_, i) => i !== indexSpeaker);
+    const updatedSpeakers = values.sessions[indexSession].speakers.filter(
+      (_, i) => i !== indexSpeaker,
+    );
 
     let updatedSessions = values.sessions;
     updatedSessions[indexSession].speakers = updatedSpeakers;
@@ -92,14 +95,14 @@ export const AgendaEdit: React.FC = () => {
     resource: "speakers", // your API endpoint for categories
     optionLabel: "names", // property to display
     optionValue: "_id", // property to use as value
-    
+
     //add really high limit to avoid default pagination in the API
     pagination: {
       pageSize: 1000,
-      current:1,
+      current: 1,
       mode: "server",
     },
-    
+
     // Filter speakers by eventId
     filters: [
       {
@@ -108,9 +111,11 @@ export const AgendaEdit: React.FC = () => {
         value: values?.eventId?._id || queryResult?.data?.data?.eventId?._id,
       },
     ],
-    
+
     queryOptions: {
-      enabled: !!(values?.eventId?._id || queryResult?.data?.data?.eventId?._id), // Only fetch when eventId exists
+      enabled: !!(
+        values?.eventId?._id || queryResult?.data?.data?.eventId?._id
+      ), // Only fetch when eventId exists
     },
     //defaultValue: values?.categories.map(category => category.id), // pre-select related categories
   });
@@ -133,41 +138,71 @@ export const AgendaEdit: React.FC = () => {
           {queryResult?.data?.data?.eventId?.name}
         </Text>
 
-        {<TextInput type="hidden" mt={8} label="" placeholder="title" {...getInputProps("title")} value="{queryResult?.data?.data?.eventId?.name}"/>}
+        {
+          <TextInput
+            type="hidden"
+            mt={8}
+            label=""
+            placeholder="title"
+            {...getInputProps("title")}
+            value="{queryResult?.data?.data?.eventId?.name}"
+          />
+        }
 
         <Stack spacing="md">
           {values.sessions.map((session, index) => (
             <Stack
               key={index}
               spacing="sm"
-              sx={{ padding: "1rem", border: "1px solid #ddd", borderRadius: "8px" }}
+              sx={{
+                padding: "1rem",
+                border: "1px solid #ddd",
+                borderRadius: "8px",
+              }}
             >
               <Group grow style={{ alignItems: "flex-end" }}>
                 <DateTimePicker
+                  onPointerEnterCapture={undefined}
+                  onPointerLeaveCapture={undefined}
                   style={{ maxWidth: "160px" }}
                   label="Start Date and Time"
                   placeholder="Select start date and time"
                   {...getInputProps(`sessions.${index}.startDateTime`)}
                   value={
                     getInputProps(`sessions.${index}.startDateTime`).value
-                      ? dayjs(getInputProps(`sessions.${index}.startDateTime`).value).toDate()
+                      ? dayjs(
+                          getInputProps(`sessions.${index}.startDateTime`)
+                            .value,
+                        ).toDate()
                       : null
                   }
-                  onChange={(value) => getInputProps(`sessions.${index}.startDateTime`).onChange(value)}
+                  onChange={(value) =>
+                    getInputProps(`sessions.${index}.startDateTime`).onChange(
+                      value,
+                    )
+                  }
                   required
                 />
 
                 <DateTimePicker
+                  onPointerEnterCapture={undefined}
+                  onPointerLeaveCapture={undefined}
                   style={{ maxWidth: "160px" }}
                   label="End Date and Time"
                   placeholder="Select end date and time"
                   {...getInputProps(`sessions.${index}.endDateTime`)}
                   value={
                     getInputProps(`sessions.${index}.endDateTime`).value
-                      ? dayjs(getInputProps(`sessions.${index}.endDateTime`).value).toDate()
+                      ? dayjs(
+                          getInputProps(`sessions.${index}.endDateTime`).value,
+                        ).toDate()
                       : null
                   }
-                  onChange={(value) => getInputProps(`sessions.${index}.endDateTime`).onChange(value)}
+                  onChange={(value) =>
+                    getInputProps(`sessions.${index}.endDateTime`).onChange(
+                      value,
+                    )
+                  }
                 />
 
                 <TextInput
@@ -177,6 +212,29 @@ export const AgendaEdit: React.FC = () => {
                   {...getInputProps(`sessions.${index}.title`)}
                   required
                 />
+                <Button
+                  variant={
+                    values.sessions[index]?.featured && (
+                      <Text size="sm" color="yellow.8" weight={700}>
+                        ⭐ Evento destacado
+                      </Text>
+                    )
+                  }
+                  color={values.sessions[index]?.featured ? "yellow" : "gray"}
+                  onClick={() => {
+                    const updatedSessions = [...values.sessions];
+                    updatedSessions[index] = {
+                      ...updatedSessions[index],
+                      featured: !updatedSessions[index]?.featured,
+                    };
+                    setFieldValue("sessions", updatedSessions);
+                  }}
+                >
+                  {values.sessions[index]?.featured
+                    ? "Destacado ⭐"
+                    : "Destacar"}
+                </Button>
+
                 <Button color="blue" onClick={() => removeSession(index)}>
                   Remove
                 </Button>
@@ -184,44 +242,64 @@ export const AgendaEdit: React.FC = () => {
 
               <Group>
                 {values?.sessions[index]?.speakers &&
-                  values?.sessions[index]?.speakers.map((speaker, speakerIndex) => (
-                    <div
-                      key={speakerIndex}
-                      style={{ marginLeft: "20px", marginBottom: "10px", display: "flex", alignItems: "flex-end" }}
-                    >
-                      <Select
+                  values?.sessions[index]?.speakers.map(
+                    (speaker, speakerIndex) => (
+                      <div
                         key={speakerIndex}
-                        style={{ display: "inline" }}
-                        label={`Speaker ${speakerIndex}`}
-                        {...getInputProps(`sessions.${index}.speakers.${speakerIndex}._id`)}
-                        data={speakerSelectProps.data}
-                        searchable={true}
-                        onSearchChange={(search)=>console.log('buscandooo',search)}
-                        filterDataOnExactSearchMatch={false}
-                      />
-                      <Button
-                        style={{ backgroundColor: "rgba(200,150,150,0.7)" }}
-                        onClick={() => removeSpeaker(index, speakerIndex)}
+                        style={{
+                          marginLeft: "20px",
+                          marginBottom: "10px",
+                          display: "flex",
+                          alignItems: "flex-end",
+                        }}
                       >
-                        x
-                      </Button>
-                    </div>
-                  ))}
+                        <Select
+                          key={speakerIndex}
+                          style={{ display: "inline" }}
+                          label={`Speaker ${speakerIndex}`}
+                          {...getInputProps(
+                            `sessions.${index}.speakers.${speakerIndex}._id`,
+                          )}
+                          data={speakerSelectProps.data}
+                          searchable={true}
+                          onSearchChange={(search) =>
+                            console.log("buscandooo", search)
+                          }
+                          filterDataOnExactSearchMatch={false}
+                        />
+                        <Button
+                          style={{ backgroundColor: "rgba(200,150,150,0.7)" }}
+                          onClick={() => removeSpeaker(index, speakerIndex)}
+                        >
+                          x
+                        </Button>
+                      </div>
+                    ),
+                  )}
                 <button type="button" onClick={() => addSpeaker(index)}>
                   Add Speaker
                 </button>
               </Group>
 
               <Group grow>
-                <TextInput label="Room" placeholder="Enter Room" {...getInputProps(`sessions.${index}.room`)} />
+                <TextInput
+                  label="Room"
+                  placeholder="Enter Room"
+                  {...getInputProps(`sessions.${index}.room`)}
+                />
 
                 <Select
                   label="Modulo"
                   placeholder="Pick one"
                   {...getInputProps(`sessions.${index}.moduleId?._id`)}
-                  {...moduleSelectProps}
-                  value = {session['moduleId']?._id ?? session['moduleId'] ?? null}
-                  onChange={(value) => getInputProps(`sessions.${index}.moduleId`).onChange(value)}
+                  data={moduleSelectProps.data}
+                  searchable={moduleSelectProps.searchable}
+                  value={
+                    session["moduleId"]?._id ?? session["moduleId"] ?? null
+                  }
+                  onChange={(value) =>
+                    getInputProps(`sessions.${index}.moduleId`).onChange(value)
+                  }
                 />
               </Group>
             </Stack>
