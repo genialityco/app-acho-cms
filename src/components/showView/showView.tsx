@@ -20,6 +20,83 @@ interface EntityFieldRendererProps {
   fieldOrder?: string[];
 }
 
+function normalizeMediaUrl(url: any): string | null {
+  if (typeof url !== "string") return null;
+
+  let u = url.trim();
+  if (!u || u.toLowerCase() === "null") return null;
+
+  // Corrige doble-encoding: %2520 -> %20
+  u = u.replace(/%25([0-9A-Fa-f]{2})/g, "%$1");
+
+  // Corrige espacios sueltos -> %20
+  u = u.replace(/ /g, "%20");
+
+  return u;
+}
+
+function normalizeVideosHtml(html: string): string {
+  if (!html) return html;
+
+  // Caso A: <video src="..."></video>  -> <video ...><source .../></video>
+  let out = html.replace(
+    /<video([^>]*?)\ssrc="([^"]+)"([^>]*)>\s*<\/video>/gi,
+    (_m, pre, src, post) => {
+      const safeSrc = normalizeMediaUrl(src);
+      if (!safeSrc) return "";
+
+      const attrs = `${pre} ${post}`;
+
+      const hasControls = /\scontrols(\s|=|>)/i.test(attrs);
+      const hasMuted = /\smuted(\s|=|>)/i.test(attrs);
+      const hasPreload = /\spreload(\s*=\s*")/i.test(attrs);
+      const hasPlaysInline = /\splaysinline(\s|=|>)/i.test(attrs);
+
+      const injected =
+        `${pre} ${post}` +
+        (hasControls ? "" : " controls") +
+        (hasMuted ? "" : " muted") +
+        (hasPreload ? "" : ` preload="metadata"`) +
+        (hasPlaysInline ? "" : " playsinline webkit-playsinline");
+
+      // Unifica style mínimo para que no colapse
+      const styleMatch = injected.match(/\sstyle="([^"]*)"/i);
+      const existingStyle = styleMatch?.[1] ?? "";
+      const mergedStyle =
+        `${existingStyle}; max-width:100%; display:block; margin:10px auto; background:#000;`
+          .replace(/;;+/g, ";")
+          .trim();
+
+      const withoutStyle = injected.replace(/\sstyle="[^"]*"/i, "");
+
+      return `
+<video ${withoutStyle} style="${mergedStyle}">
+  <source src="${safeSrc}" type="video/mp4" />
+</video>
+      `.trim();
+    },
+  );
+
+  // Caso B: si ya venía con <source src="...">
+  out = out.replace(
+    /<source([^>]*?)\ssrc="([^"]+)"([^>]*?)\/?>/gi,
+    (_m, a, src, b) => {
+      const safeSrc = normalizeMediaUrl(src);
+      if (!safeSrc) return "";
+      return `<source${a} src="${safeSrc}"${b} />`;
+    },
+  );
+
+  // Caso C: A veces viene <video ...>...</video> sin src pero con source,
+  // aquí solo nos aseguramos que el video tenga controls (por si lo dejó Quill sin)
+  out = out.replace(
+    /<video(?![^>]*\scontrols)([^>]*)>/gi,
+    `<video$1 controls>`,
+  );
+
+  return out;
+}
+
 export const EntityFieldRenderer: React.FC<EntityFieldRendererProps> = ({
   data,
   excludeFields = ["__v"],
@@ -357,14 +434,16 @@ export const EntityFieldRenderer: React.FC<EntityFieldRendererProps> = ({
 
     // 🔹 HTML → renderizado directo
     if (isHtml(stringValue)) {
+      const safeHtml = normalizeVideosHtml(stringValue);
+
       return (
         <Box
           style={{
             wordBreak: "break-word",
-            overflow: "auto", // Oculta el contenido desbordado y añade una barra de desplazamiento
-            maxWidth: "100%", // Asegura que el contenido no exceda el ancho del contenedor padre
+            overflow: "auto",
+            maxWidth: "100%",
           }}
-          dangerouslySetInnerHTML={{ __html: stringValue }}
+          dangerouslySetInnerHTML={{ __html: safeHtml }}
         />
       );
     }
