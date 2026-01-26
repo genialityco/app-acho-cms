@@ -8,7 +8,7 @@ import { IconUpload, IconPhoto, IconX, IconVideo } from "@tabler/icons-react";
 import axios from "axios";
 import { Dropzone as DocDropzone } from "@mantine/dropzone";
 import { v4 as uuidv4 } from "uuid";
-import { getQuillConfig, useQuillVideoHandlers } from "../../components/quill"; // Asegúrate de que la ruta sea correcta
+import { getQuillConfig, useQuillVideoHandlers } from "../../components/quill";
 import { DateTimePicker } from "@mantine/dates";
 
 export const NewsCreate: React.FC = () => {
@@ -21,10 +21,8 @@ export const NewsCreate: React.FC = () => {
     { id: string; name: string; type: string; url: string }[]
   >([]);
 
-  // Ref para ReactQuill
   const quillRef = useRef<ReactQuill>(null);
 
-  // Usar el hook personalizado para manejar videos e imágenes
   const {
     insertVideoFromFile,
     insertVideoFromUrl,
@@ -32,7 +30,6 @@ export const NewsCreate: React.FC = () => {
     insertImageFromUrl,
   } = useQuillVideoHandlers(quillRef);
 
-  // Obtener configuración predeterminada de Quill
   const { modules, formats } = getQuillConfig();
 
   const { saveButtonProps, getInputProps, setFieldValue, errors } = useForm({
@@ -43,30 +40,31 @@ export const NewsCreate: React.FC = () => {
       featuredImage: "",
       scheduledAt: null as Date | null,
       publishedAt: null as Date | null,
-      documents: [],
+      documents: [] as {
+        id: string;
+        name: string;
+        type: string;
+        url: string;
+      }[],
     },
     validate: {
       title: (value) => (value.length < 3 ? "Title is too short" : null),
       content: (value) => (value.length < 10 ? "Content is too short" : null),
       scheduledAt: (value: Date | null) => {
-        if (value && value <= new Date()) {
+        if (value && value <= new Date())
           return "Scheduled date must be in the future";
-        }
         return null;
       },
-      publishedAt: (value: Date | null) => {
-        return null;
-      },
+      publishedAt: (_value: Date | null) => null,
     },
   });
 
-  // Handler para cargar imágenes en el editor
   const handleImageUploadInEditor = async () => {
     try {
       setLoadingImage(true);
       await insertImageFromFile(
         "https://lobster-app-uy9hx.ondigitalocean.app/upload/image",
-        { "Content-Type": "multipart/form-data" }
+        { "Content-Type": "multipart/form-data" },
       );
     } catch (error) {
       console.error("Error uploading image:", error);
@@ -76,13 +74,12 @@ export const NewsCreate: React.FC = () => {
     }
   };
 
-  // Handler para cargar videos en el editor
   const handleVideoUploadInEditor = async () => {
     try {
       setLoadingVideo(true);
       await insertVideoFromFile(
         "https://lobster-app-uy9hx.ondigitalocean.app/upload/document",
-        { "Content-Type": "multipart/form-data" }
+        { "Content-Type": "multipart/form-data" },
       );
     } catch (error) {
       console.error("Error uploading video:", error);
@@ -92,17 +89,11 @@ export const NewsCreate: React.FC = () => {
     }
   };
 
-  // Handler para insertar imagen desde URL
-  const handleImageUrlInEditor = () => {
+  const handleImageUrlInEditor = () =>
     insertImageFromUrl("Ingresa la URL de la imagen:");
-  };
-
-  // Handler para insertar video desde URL
-  const handleVideoUrlInEditor = () => {
+  const handleVideoUrlInEditor = () =>
     insertVideoFromUrl("Ingresa la URL del video (YouTube, Vimeo, etc.):");
-  };
 
-  // Manejar la carga de imágenes destacadas
   const handleImageUpload = async () => {
     if (featuredImageFiles.length === 0) {
       alert("No files selected!");
@@ -117,12 +108,9 @@ export const NewsCreate: React.FC = () => {
       const response = await axios.post(
         "https://lobster-app-uy9hx.ondigitalocean.app/upload/image",
         formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
+        { headers: { "Content-Type": "multipart/form-data" } },
       );
+
       setFieldValue("featuredImage", response.data.imageUrl);
     } catch (error) {
       console.error("Error uploading image:", error);
@@ -132,7 +120,6 @@ export const NewsCreate: React.FC = () => {
     }
   };
 
-  // Manejar la carga de documentos
   const sanitizeFileName = (fileName: string) =>
     fileName.replace(/[^a-zA-Z0-9.\-_]/g, "_");
 
@@ -162,8 +149,9 @@ export const NewsCreate: React.FC = () => {
         const response = await axios.post(
           "https://lobster-app-uy9hx.ondigitalocean.app/upload/document",
           formData,
-          { headers: { "Content-Type": "multipart/form-data" } }
+          { headers: { "Content-Type": "multipart/form-data" } },
         );
+
         uploadedDocs.push({
           id: uuidv4(),
           name: sanitizedFileName,
@@ -179,24 +167,21 @@ export const NewsCreate: React.FC = () => {
       }
     }
 
-    setDocuments((prev) => [...prev, ...uploadedDocs]);
+    const nextDocs = [...documents, ...uploadedDocs];
+    setDocuments(nextDocs);
     setDocFiles([]);
     setDocLoading(false);
-    setFieldValue("documents", [...documents, ...uploadedDocs]);
+    setFieldValue("documents", nextDocs);
   };
 
-  const handleScheduledAtChange = (value: Date | null) => {
+  const handleScheduledAtChange = (value: Date | null) =>
     setFieldValue("scheduledAt", value);
-  };
-
-  const handlePublishedAtChange = (value: Date | null) => {
+  const handlePublishedAtChange = (value: Date | null) =>
     setFieldValue("publishedAt", value);
-  };
 
   return (
     <Create saveButtonProps={saveButtonProps}>
       <form>
-        {/* Título */}
         <TextInput
           mt="sm"
           label="Title"
@@ -205,51 +190,55 @@ export const NewsCreate: React.FC = () => {
           error={errors.title}
         />
 
-        {/* Editor de contenido */}
         <Box mt="sm">
-          <Text weight={500} size="sm" color="gray.700">
+          <Text fw={500} size="sm" c="gray.7">
             Content
           </Text>
 
-          {/* Botones para insertar media en el editor */}
-          <Group spacing="xs" mb="sm">
+          <Group gap="xs" mb="sm">
             <Button
+              type="button"
               size="xs"
               variant="light"
-              leftIcon={<IconPhoto size="1rem" />}
+              leftSection={<IconPhoto size="1rem" />}
               onClick={handleImageUploadInEditor}
               loading={loadingImage}
             >
               Subir Imagen
             </Button>
+
             <Button
+              type="button"
               size="xs"
               variant="light"
-              leftIcon={<IconVideo size="1rem" />}
+              leftSection={<IconVideo size="1rem" />}
               onClick={handleVideoUploadInEditor}
               loading={loadingVideo}
             >
               Subir Video
             </Button>
+
             <Button
+              type="button"
               size="xs"
               variant="outline"
-              leftIcon={<IconPhoto size="1rem" />}
+              leftSection={<IconPhoto size="1rem" />}
               onClick={handleImageUrlInEditor}
             >
               Imagen URL
             </Button>
+
             <Button
+              type="button"
               size="xs"
               variant="outline"
-              leftIcon={<IconVideo size="1rem" />}
+              leftSection={<IconVideo size="1rem" />}
               onClick={handleVideoUrlInEditor}
             >
               Video URL
             </Button>
           </Group>
 
-          {/* ReactQuill con configuración del VideoBlot */}
           <Box style={{ minHeight: "350px" }}>
             <ReactQuill
               ref={quillRef}
@@ -268,12 +257,12 @@ export const NewsCreate: React.FC = () => {
           </Box>
 
           {errors.content && (
-            <Text mt="xs" size="xs" color="red">
+            <Text mt="xs" size="xs" c="red">
               {errors.content}
             </Text>
           )}
         </Box>
-        {/* Fecha programada */}
+
         <DateTimePicker
           mt="sm"
           label="Scheduled At"
@@ -281,11 +270,9 @@ export const NewsCreate: React.FC = () => {
           value={getInputProps("scheduledAt").value}
           onChange={handleScheduledAtChange}
           error={errors.scheduledAt}
-          minDate={new Date()} // No permite fechas pasadas
+          minDate={new Date()}
           clearable
           description="Select a future date/time to schedule"
-          onPointerEnterCapture={undefined}
-          onPointerLeaveCapture={undefined}
         />
 
         <DateTimePicker
@@ -299,17 +286,17 @@ export const NewsCreate: React.FC = () => {
           description="Define cuándo debe quedar visible/publicada la noticia"
         />
 
-        {/* Imagen destacada */}
         <Box mt="sm">
-          <Text weight={500} size="sm" mb="xs">
+          <Text fw={500} size="sm" mb="xs">
             Featured Image
           </Text>
+
           <Dropzone
             onDrop={(files) => setFeaturedImageFiles(files)}
             maxSize={3 * 1024 ** 2}
             accept={IMAGE_MIME_TYPE}
           >
-            <Group position="center" spacing="xl" style={{ minHeight: 120 }}>
+            <Group justify="center" gap="xl" style={{ minHeight: 120 }}>
               <Dropzone.Accept>
                 <IconUpload size="2rem" stroke={1.5} />
               </Dropzone.Accept>
@@ -322,17 +309,19 @@ export const NewsCreate: React.FC = () => {
               <div>
                 {featuredImageFiles.length > 0 ? (
                   <Text size="sm">
-                    {featuredImageFiles.map((file) => file.name).join(", ")}
+                    {featuredImageFiles.map((f) => f.name).join(", ")}
                   </Text>
                 ) : (
-                  <Text size="sm" color="dimmed">
+                  <Text size="sm" c="dimmed">
                     Drag files here or click to upload
                   </Text>
                 )}
               </div>
             </Group>
           </Dropzone>
+
           <Button
+            type="button"
             mt="sm"
             fullWidth
             disabled={featuredImageFiles.length === 0}
@@ -341,6 +330,7 @@ export const NewsCreate: React.FC = () => {
           >
             Upload Featured Image
           </Button>
+
           {getInputProps("featuredImage").value && (
             <img
               src={getInputProps("featuredImage").value}
@@ -355,11 +345,11 @@ export const NewsCreate: React.FC = () => {
           )}
         </Box>
 
-        {/* Documentos */}
         <Box mt="md">
-          <Text weight={500} size="sm" mb="xs">
+          <Text fw={500} size="sm" mb="xs">
             Documentos
           </Text>
+
           <DocDropzone
             onDrop={(files) => setDocFiles(files)}
             maxSize={10 * 1024 ** 2}
@@ -372,25 +362,27 @@ export const NewsCreate: React.FC = () => {
               "application/vnd.ms-excel",
               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
               "text/plain",
-              "video/*", // Soporte para videos
+              "video/*",
             ]}
           >
-            <Group position="center" spacing="xl" style={{ minHeight: 80 }}>
+            <Group justify="center" gap="xl" style={{ minHeight: 80 }}>
               <IconUpload size="2rem" stroke={1.5} />
               <div>
                 {docFiles.length > 0 ? (
                   <Text size="sm">
-                    {docFiles.map((file) => file.name).join(", ")}
+                    {docFiles.map((f) => f.name).join(", ")}
                   </Text>
                 ) : (
-                  <Text size="sm" color="dimmed">
+                  <Text size="sm" c="dimmed">
                     Arrastra o haz click para cargar documentos y videos
                   </Text>
                 )}
               </div>
             </Group>
           </DocDropzone>
+
           <Button
+            type="button"
             mt="sm"
             fullWidth
             disabled={docFiles.length === 0}
@@ -399,16 +391,18 @@ export const NewsCreate: React.FC = () => {
           >
             Subir Documentos/Videos
           </Button>
+
           {documents.length > 0 && (
             <Box mt="sm">
-              <Text size="sm" weight={500}>
+              <Text size="sm" fw={500}>
                 Documentos cargados:
               </Text>
+
               {documents.map((doc) => (
-                <Group key={doc.id} spacing={8}>
+                <Group key={doc.id} gap={8}>
                   <Text size="sm">{doc.name}</Text>
                   <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                    <Text size="xs" color="blue">
+                    <Text size="xs" c="blue">
                       Ver
                     </Text>
                   </a>
@@ -417,13 +411,6 @@ export const NewsCreate: React.FC = () => {
             </Box>
           )}
         </Box>
-
-        {/* Campo oculto para documentos */}
-        <input
-          type="hidden"
-          {...getInputProps("documents")}
-          value={JSON.stringify(documents)}
-        />
       </form>
     </Create>
   );
