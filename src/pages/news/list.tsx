@@ -57,6 +57,25 @@ export const NewsList: React.FC = () => {
         enableSorting: false,
       },
       {
+        id: "createdAt",
+        header: "Fecha de creación",
+        accessorKey: "createdAt",
+        cell: ({ getValue }) => {
+          const v = getValue();
+          if (!v) return "-";
+
+          const d = new Date(v as string); // si te llega ISO string
+          return isNaN(d.getTime())
+            ? String(v)
+            : d.toLocaleString("es-CO", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+              });
+        },
+        enableColumnFilter: false,
+      },
+      {
         id: "actions",
         header: "Actions",
         accessorKey: "_id",
