@@ -6,13 +6,7 @@ import {
   HeaderGroup,
   RowModel,
 } from "@tanstack/react-table";
-import {
-  List,
-  ShowButton,
-  EditButton,
-  DeleteButton,
-  DateField,
-} from "@refinedev/mantine";
+import { List, ShowButton, EditButton, DeleteButton } from "@refinedev/mantine";
 import {
   Box,
   Group,
@@ -24,12 +18,15 @@ import {
   ActionIcon,
   Tooltip,
 } from "@mantine/core";
-import { IconEye, IconEyeOff } from "@tabler/icons-react"; // si no lo tienes: npm i @tabler/icons-react
+import {
+  IconEye,
+  IconEyeOff,
+  IconCopy, // ✅ duplicar
+} from "@tabler/icons-react";
 
 import { ColumnFilter, ColumnSorter } from "../../components/table";
 import type { INews } from "../../interfaces";
 import { useApiUrl, useInvalidate } from "@refinedev/core";
-import { customGenRestDataProvider } from "../../components/dataProvider/customGenRestDataProvider";
 
 export const NewsList: React.FC = () => {
   // Definición de columnas
@@ -73,7 +70,7 @@ export const NewsList: React.FC = () => {
         ),
       },
     ],
-    []
+    [],
   );
 
   // Configuración de la tabla
@@ -90,6 +87,7 @@ export const NewsList: React.FC = () => {
           <TableHeader getHeaderGroups={getHeaderGroups} />
           <TableBody getRowModel={getRowModel} />
         </Table>
+
         <Pagination
           position="right"
           total={pageCount}
@@ -110,27 +108,72 @@ const ActionButtons: React.FC<{ recordId: string; isPublic?: boolean }> = ({
   const invalidate = useInvalidate();
   const apiUrl = useApiUrl();
 
+  // ✅ Publicar / despublicar (ya lo tenías)
   const onToggle = async () => {
     try {
       const res = await fetch(`${apiUrl}/news/public/${recordId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        // ⚠️ si tu API usa cookies/sesión, agrega:
-        // credentials: "include",
       });
 
       if (!res.ok) {
         const text = await res.text().catch(() => "");
         throw new Error(text || `HTTP ${res.status}`);
       }
-      // Si la actualización fue exitosa
-      // puedes mostrar un mensaje de éxito aquí
-      console.log("Noticia actualizada con éxito");
 
-      // refresca la lista
       await invalidate({ resource: "news", invalidates: ["list", "many"] });
+    } catch (e: any) {
+      console.error(e);
+    }
+  };
 
-      // feedback (opcional)
+  // ✅ DUPLICAR / CREAR COPIA
+  const onDuplicate = async () => {
+    try {
+      // 1) Traer original
+      const getRes = await fetch(`${apiUrl}/news/${recordId}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!getRes.ok) {
+        const text = await getRes.text().catch(() => "");
+        throw new Error(text || `HTTP ${getRes.status}`);
+      }
+
+      const original = await getRes.json();
+
+      // Si tu API responde { data: {...} }, usa .data
+      const item = original?.data ?? original;
+
+      // 2) Armar payload NUEVO (solo campos del create/edit)
+      const payload = {
+        title: item?.title ? `${item.title} (copia)` : "Copia",
+        content: item?.content ?? "",
+        organizationId: item?.organizationId ?? "66f1d236ee78a23c67fada2a",
+        featuredImage: item?.featuredImage ?? "",
+        scheduledAt: item?.scheduledAt ?? null,
+        publishedAt: item?.publishedAt ?? null,
+        documents: Array.isArray(item?.documents) ? item.documents : [],
+
+        // opcional: que la copia arranque privada
+        isPublic: false,
+      };
+
+      // 3) Crear nuevo registro
+      const postRes = await fetch(`${apiUrl}/news`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!postRes.ok) {
+        const text = await postRes.text().catch(() => "");
+        throw new Error(text || `HTTP ${postRes.status}`);
+      }
+
+      // 4) refrescar la lista
+      await invalidate({ resource: "news", invalidates: ["list", "many"] });
     } catch (e: any) {
       console.error(e);
     }
@@ -138,16 +181,25 @@ const ActionButtons: React.FC<{ recordId: string; isPublic?: boolean }> = ({
 
   return (
     <Group spacing="xs" noWrap>
+      {/* ✅ Duplicar */}
+      <Tooltip label="Duplicar">
+        <ActionIcon variant="light" aria-label="Duplicar" onClick={onDuplicate}>
+          <IconCopy size={18} />
+        </ActionIcon>
+      </Tooltip>
+
+      {/* Público / no público */}
       <Tooltip label={isPublic ? "Pública" : "No pública"}>
         <ActionIcon
           variant="light"
           color={isPublic ? "green" : "gray"}
           aria-label={isPublic ? "Pública" : "No pública"}
-          onClick={onToggle} // ✅ aquí llamas /news/public/:id
+          onClick={onToggle}
         >
           {isPublic ? <IconEye size={18} /> : <IconEyeOff size={18} />}
         </ActionIcon>
       </Tooltip>
+
       <ShowButton hideText recordItemId={recordId} />
       <EditButton hideText recordItemId={recordId} />
       <DeleteButton hideText recordItemId={recordId} />
@@ -169,7 +221,7 @@ const TableHeader: React.FC<{
                 <Box>
                   {flexRender(
                     header.column.columnDef.header,
-                    header.getContext()
+                    header.getContext(),
                   )}
                 </Box>
                 <Group spacing="xs" noWrap>
