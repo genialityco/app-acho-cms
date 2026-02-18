@@ -39,7 +39,6 @@ export const NewsCreate: React.FC = () => {
       organizationId: "66f1d236ee78a23c67fada2a",
       featuredImage: "",
       scheduledAt: null as Date | null,
-      publishedAt: null as Date | null,
       documents: [] as {
         id: string;
         name: string;
@@ -55,7 +54,6 @@ export const NewsCreate: React.FC = () => {
           return "Scheduled date must be in the future";
         return null;
       },
-      publishedAt: (_value: Date | null) => null,
     },
   });
 
@@ -176,8 +174,6 @@ export const NewsCreate: React.FC = () => {
 
   const handleScheduledAtChange = (value: Date | null) =>
     setFieldValue("scheduledAt", value);
-  const handlePublishedAtChange = (value: Date | null) =>
-    setFieldValue("publishedAt", value);
 
   return (
     <Create saveButtonProps={saveButtonProps}>
@@ -273,17 +269,6 @@ export const NewsCreate: React.FC = () => {
           minDate={new Date()}
           clearable
           description="Select a future date/time to schedule"
-        />
-
-        <DateTimePicker
-          mt="sm"
-          label="Fecha de publicación"
-          placeholder="Selecciona fecha y hora de publicación"
-          value={getInputProps("publishedAt").value}
-          onChange={handlePublishedAtChange}
-          error={errors.publishedAt}
-          clearable
-          description="Define cuándo debe quedar visible/publicada la noticia"
         />
 
         <Box mt="sm">

@@ -67,7 +67,6 @@ export const NewsEdit: React.FC = () => {
       organizationId: "",
       featuredImage: "",
       scheduledAt: null as Date | null,
-      publishedAt: null as Date | null,
       documents: [] as DocItem[],
     },
     validate: {
@@ -87,7 +86,6 @@ export const NewsEdit: React.FC = () => {
       organizationId,
       featuredImage,
       scheduledAt,
-      publishedAt,
       documents: docsFromApi,
     } = data;
 
@@ -106,12 +104,6 @@ export const NewsEdit: React.FC = () => {
     } else {
       setHasScheduledAt(false);
       setFieldValue("scheduledAt", null);
-    }
-
-    if (publishedAt) {
-      setFieldValue("publishedAt", new Date(publishedAt));
-    } else {
-      setFieldValue("publishedAt", null);
     }
   }, [queryResult?.data?.data, setFieldValue]);
 
@@ -239,10 +231,6 @@ export const NewsEdit: React.FC = () => {
     setFieldValue("scheduledAt", value);
   };
 
-  const handlePublishedAtChange = (value: Date | null) => {
-    setFieldValue("publishedAt", value);
-  };
-
   return (
     <Edit saveButtonProps={saveButtonProps}>
       <form>
@@ -339,17 +327,6 @@ export const NewsEdit: React.FC = () => {
               description="Leave empty to send immediately, or select a future date/time to schedule"
             />
           )}
-
-          <DateTimePicker
-            mt="sm"
-            label="Fecha de publicación"
-            placeholder="Selecciona fecha y hora de publicación"
-            value={getInputProps("publishedAt").value}
-            onChange={handlePublishedAtChange}
-            error={errors.publishedAt}
-            clearable
-            description="Define cuándo debe quedar visible/publicada la noticia"
-          />
         </Box>
 
         <Box mt="sm">
