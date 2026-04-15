@@ -8,7 +8,7 @@ export const NotificationTemplateCreate: React.FC = () => {
   const [dataError, setDataError] = useState<string | null>(null);
   const [bodyLength, setBodyLength] = useState(0); // Estado para contar caracteres del body
   const maxTitleLength = 50;
-  const maxBodyLength = 250;
+  const maxBodyLength = 500;
 
   const { saveButtonProps, getInputProps, setFieldValue, errors } = useForm({
     initialValues: {
