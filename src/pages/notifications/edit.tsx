@@ -9,7 +9,7 @@ export const NotificationTemplateEdit: React.FC = () => {
   const [bodyLength, setBodyLength] = useState(0); // Estado para contar caracteres del body
   const [hasScheduledAt, setHasScheduledAt] = useState(false); // Control para mostrar el campo scheduledAt
   const maxTitleLength = 50;
-  const maxBodyLength = 500;
+  const maxBodyLength = 750;
 
   const {
     saveButtonProps,
