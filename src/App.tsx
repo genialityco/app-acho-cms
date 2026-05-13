@@ -66,6 +66,7 @@ import { NewsShow } from "./pages/news/show";
 import { MemberShow } from "./pages/member/show";
 import { NotificationShow } from "./pages/notifications/show";
 import { HighlightsShow } from "./pages/highlights/show";
+import { PromoModalPage } from "./pages/promo-modal";
 
 // Mock de credenciales de autenticación
 const authCredentials = {
@@ -211,6 +212,11 @@ const App: React.FC = () => {
               {
                 name: "statistics",
                 list: "/statistics"
+              },
+              {
+                name: "promo-modal",
+                list: "/promo-modal",
+                meta: { label: "Promo Modal" },
               }
             ]}
             options={{
@@ -320,9 +326,9 @@ const App: React.FC = () => {
                 </Route>
                 <Route path="/statistics">
                   <Route index element={<ListStatistics />} />
-                  {/* <Route path="create" element={<SurveyCreate />} /> */}
-                  {/* <Route path="edit/:id" element={<SurveyEdit />} />  */}
-                  {/* <Route path="show/:id" element={<ModuleShow />} /> */}
+                </Route>
+                <Route path="/promo-modal">
+                  <Route index element={<PromoModalPage />} />
                 </Route>
               </Route>
 
