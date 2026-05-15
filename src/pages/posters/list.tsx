@@ -92,7 +92,7 @@ export const PosterList: React.FC = () => {
         },
         cell: (row) => {
           return (
-            <a target="_blank" href={row.getValue()}>
+            <a target="_blank" href={row.getValue() as string}>
               {" "}
               LINK{" "}
             </a>
@@ -175,8 +175,7 @@ export const PosterList: React.FC = () => {
                   return (
                     <th
                       key={header.id}
-                      style={header.column?.columnDef?.meta?.style ? header.column?.columnDef?.meta?.style : {}}
-                      width={header.column?.columnDef?.meta?.width ? header.column?.columnDef?.meta?.width : ""}
+                      style={{...(header.column?.columnDef?.meta?.style ?? {}), ...(header.column?.columnDef?.meta?.width ? { width: header.column.columnDef.meta!.width } : {})}}
                     >
                       {!header.isPlaceholder && (
                         <>

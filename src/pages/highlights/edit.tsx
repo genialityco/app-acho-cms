@@ -33,7 +33,7 @@ export const HighlightEdit: React.FC = () => {
     },
   });
 
-  const { data } = queryResult;
+  const data = queryResult?.data;
 
   React.useEffect(() => {
     if (data) {

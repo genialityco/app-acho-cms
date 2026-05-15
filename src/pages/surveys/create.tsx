@@ -1,5 +1,6 @@
 import React from "react";
 import { Create, useForm } from "@refinedev/mantine";
+import type { IQuestion } from "../../interfaces";
 import {
   TextInput,
   Checkbox,
@@ -16,12 +17,12 @@ export const SurveyCreate: React.FC = () => {
       title: "",
       isPublished: false,
       isOpen: false,
-      questions: [],
+      questions: [] as IQuestion[],
     },
   });
 
   const addQuestion = () => {
-    const newQuestion = {
+    const newQuestion: IQuestion = {
       id: `question-${values.questions.length + 1}`,
       type: "radio",
       title: "",
@@ -37,19 +38,19 @@ export const SurveyCreate: React.FC = () => {
 
   const handleOptionChange = (index: number, optionIndex: number, value: string) => {
     const updatedQuestions = [...values.questions];
-    updatedQuestions[index].options[optionIndex] = value;
+    updatedQuestions[index]!.options![optionIndex] = value;
     setFieldValue("questions", updatedQuestions);
   };
 
   const addOption = (index: number) => {
     const updatedQuestions = [...values.questions];
-    updatedQuestions[index].options.push("");
+    updatedQuestions[index]!.options!.push("");
     setFieldValue("questions", updatedQuestions);
   };
 
   const removeOption = (index: number, optionIndex: number) => {
     const updatedQuestions = [...values.questions];
-    updatedQuestions[index].options = updatedQuestions[index].options.filter((_, i) => i !== optionIndex);
+    updatedQuestions[index]!.options = updatedQuestions[index]!.options!.filter((_, i) => i !== optionIndex);
     setFieldValue("questions", updatedQuestions);
   };
 
@@ -96,7 +97,7 @@ export const SurveyCreate: React.FC = () => {
                 value={question.type}
                 onChange={(value) => {
                   const updatedQuestions = [...values.questions];
-                  updatedQuestions[index].type = value!;
+                  updatedQuestions[index]!.type = value as IQuestion["type"];
                   if (value === "text") updatedQuestions[index].options = [];
                   setFieldValue("questions", updatedQuestions);
                 }}
@@ -106,7 +107,7 @@ export const SurveyCreate: React.FC = () => {
               {(question.type === "radio" || question.type === "checkbox") && (
                 <Stack spacing="xs">
                   <Text weight={500} size="sm">Opciones</Text>
-                  {question.options.map((option, optionIndex) => (
+                  {(question.options ?? []).map((option, optionIndex) => (
                     <Group key={optionIndex} position="apart">
                       <TextInput
                         placeholder={`Opción ${optionIndex + 1}`}

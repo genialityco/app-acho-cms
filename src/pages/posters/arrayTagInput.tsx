@@ -2,17 +2,17 @@ import { useState } from 'react';
 import { TextInput, Badge, Group } from '@mantine/core';
 
 function ArrayTagInput() {
-  const [tags, setTags] = useState([]);
+  const [tags, setTags] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState('');
 
-  const handleKeyDown = (event) => {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter' && inputValue.trim()) {
       setTags([...tags, inputValue.trim()]);
       setInputValue('');
     }
   };
 
-  const removeTag = (tagToRemove) => {
+  const removeTag = (tagToRemove: string) => {
     setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 

@@ -1,4 +1,4 @@
-import { DataProvider } from "@refinedev/core";
+import type { DataProvider, LogicalFilter } from "@refinedev/core";
 import dataProvider from "@refinedev/simple-rest";
 
 //const API_URL = "http://192.168.40.21:3000";
@@ -32,7 +32,8 @@ export const customGenRestDataProvider: DataProvider = {
         console.log("🔍 Procesando filtros:", filters); // Debug
 
         filters.forEach((filter, index) => {
-          const { field, operator, value } = filter;
+          if (!("field" in filter)) return;
+          const { field, operator, value } = filter as LogicalFilter;
 
           // Estructura: filters[index][campo] = valor
           params.append(`filters[${index}][field]`, field);
@@ -138,18 +139,4 @@ export const customGenRestDataProvider: DataProvider = {
     return restProvider.update({ resource, id, variables });
   },
 
-  /**
-   * Personalización de deleteOne
-   * Modifica el comportamiento de eliminación.
-   */
-  deleteOne: async (params) => {
-    try {
-      const response = await restProvider.deleteOne(params);
-
-      return response;
-    } catch (error) {
-      console.error("Error en deleteOne:", error);
-      throw error;
-    }
-  },
 };

@@ -27,7 +27,7 @@ export const ModuleCreate: React.FC = () => {
 
   const [inputValue, setInputValue] = useState('');
 
-  const handleKeyDown = (event) => {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter' && inputValue.trim()) {
       const newValue = [...values.authors, inputValue.trim()];
       getInputProps(`authors`).onChange(newValue) 
@@ -35,7 +35,7 @@ export const ModuleCreate: React.FC = () => {
 
     }
   };
-  const removeTag = (tagToRemove) => {
+  const removeTag = (tagToRemove: string) => {
     const newValue = (values.authors.filter((tag) => tag !== tagToRemove));
     getInputProps(`authors`).onChange(newValue);
   };

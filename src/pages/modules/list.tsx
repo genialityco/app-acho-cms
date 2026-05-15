@@ -148,7 +148,8 @@ export const ModuleList: React.FC = () => {
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <th key={header.id} style={header.column?.columnDef?.meta?.style?header.column?.columnDef?.meta?.style:{}} width={(header.column?.columnDef?.meta?.width?header.column?.columnDef?.meta?.width:'')}>
+                    <th key={header.id} style={{...(header.column?.columnDef?.meta?.style ?? {}), ...(header.column?.columnDef?.meta?.width ? { width: header.column.columnDef.meta!.width } : {})}}>
+
             
                       {!header.isPlaceholder && (
                         <Group spacing="xs" noWrap>

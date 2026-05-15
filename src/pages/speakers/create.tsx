@@ -13,7 +13,7 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import MDEditor from "@uiw/react-md-editor";
-import ArrayTagInput from "./arrayTagInput";
+import ArrayTagInput from "../modules/arrayTagInput";
 import type { ICategory } from "../../interfaces";
 import { DateField } from "@refinedev/mantine";
 import { DatePicker } from "@mantine/dates";
@@ -51,6 +51,7 @@ export const SpeakerCreate: React.FC = () => {
       isInternational: false,
       imageUrl: "",
       eventId: "6807d5a91c2e1e14b22da8b0",
+      authors: [] as string[],
     },
     transformValues: (values) => {
       return values;
@@ -74,7 +75,7 @@ export const SpeakerCreate: React.FC = () => {
 
   const theme = useMantineTheme();
 
-  const sanitizeFileName = (fileName) => {
+  const sanitizeFileName = (fileName: string) => {
     // Remove or replace any characters that are not letters, numbers, dots, hyphens, or underscores
     return fileName.replace(/[^a-zA-Z0-9.\-_]/g, '_');
   };
@@ -110,15 +111,15 @@ export const SpeakerCreate: React.FC = () => {
     }
   };
 
-  const handleKeyDown = (event) => {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter" && inputValue.trim()) {
       const newValue = [...values.authors, inputValue.trim()];
       getInputProps(`authors`).onChange(newValue);
       setInputValue("");
     }
   };
-  const removeTag = (tagToRemove) => {
-    const newValue = values.authors.filter((tag) => tag !== tagToRemove);
+  const removeTag = (tagToRemove: string) => {
+    const newValue = values.authors.filter((tag: string) => tag !== tagToRemove);
     getInputProps(`authors`).onChange(newValue);
   };
 

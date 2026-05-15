@@ -65,7 +65,7 @@ export const SpeakerList: React.FC = () => {
         header: "EventId",
         accessorKey: "eventId",
         meta: {
-          filterOperator: "contains",
+          filterOperator: "eq",
         },
       },
       {
@@ -77,7 +77,7 @@ export const SpeakerList: React.FC = () => {
         },
         cell: (row) => {
           return (
-              <img style={{width:"80px"}} src={row.getValue()} />
+              <img style={{width:"80px"}} src={row.getValue() as string} />
           );
         },
 
@@ -143,8 +143,8 @@ export const SpeakerList: React.FC = () => {
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <th key={header.id} style={header.column?.columnDef?.meta?.style?header.column?.columnDef?.meta?.style:{}} width={(header.column?.columnDef?.meta?.width?header.column?.columnDef?.meta?.width:'')}>
-                    {console.log('header.column',header.column?.columnDef?.meta)}
+                    <th key={header.id} style={{...(header.column?.columnDef?.meta?.style ?? {}), ...(header.column?.columnDef?.meta?.width ? { width: header.column.columnDef.meta!.width } : {})}}>
+
                       {!header.isPlaceholder && (
                         <Group spacing="xs" noWrap>
                           <Box>{flexRender(header.column.columnDef.header, header.getContext())}</Box>

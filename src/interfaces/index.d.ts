@@ -1,5 +1,18 @@
 import type { Column } from "@tanstack/react-table";
 import { BaseRecord } from "@refinedev/core";
+import React from "react";
+
+declare module "@tanstack/react-table" {
+  interface ColumnMeta<TData, TValue> {
+    filterOperator?: string;
+    filterElement?: {
+      component: React.ComponentType<any>;
+      meta?: Record<string, any>;
+    };
+    style?: React.CSSProperties;
+    width?: string | number;
+  }
+}
 
 export interface ICategory {
   _id: string;
@@ -23,10 +36,8 @@ export interface IPoster {
   topic: string;
   institution: string;
   urlPdf: string;
-  authors: Array; //.,status: "published" | "draft" | "rejected";
+  authors: any[]; //.,status: "published" | "draft" | "rejected";
 }
-
-authors: [];
 
 export interface IEvent extends BaseRecord {
   _id: string;
@@ -42,7 +53,7 @@ export interface IAgenda {
   _id: string;
   name: string;
   description: string;
-  eventId: string;
+  eventId: { _id: string; name?: string };
   startDate: Date;
   organizationId: Number;
   //status: "published" | "draft" | "rejected";
@@ -51,14 +62,29 @@ export interface IAgenda {
   valory: string;
 }
 
+export interface IModule {
+  _id: string;
+  id?: string;
+  votes: number;
+  title: string;
+  category: { id: string };
+  topic: string;
+  authors: string;
+  urlPdf: string;
+  startDate: string;
+  status?: string;
+  content?: string;
+}
+
 export interface ISpeaker {
   _id: string;
   names: string;
   description: string;
   location: string;
-  eventId: { _id: number };
+  eventId: { _id: string };
   imageUrl: string;
   isInternational: boolean;
+  authors?: string[];
 }
 
 export interface INews {

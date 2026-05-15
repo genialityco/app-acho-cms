@@ -233,7 +233,7 @@ export const EntityFieldRenderer: React.FC<EntityFieldRendererProps> = ({
 
     if (obj.address && obj.coordinates) {
       return (
-        <Stack gap="xs">
+        <Stack spacing="xs">
           <Text>
             <strong>Dirección:</strong> {obj.address}
           </Text>
@@ -243,17 +243,17 @@ export const EntityFieldRenderer: React.FC<EntityFieldRendererProps> = ({
     }
     if (obj?.featured === true) {
       return (
-        <Stack gap="xs">
+        <Stack spacing="xs">
           <Badge color="yellow" variant="filled">
             Evento destacado
           </Badge>
 
           <Card withBorder p="sm" radius="sm">
-            <Stack gap="xs">
+            <Stack spacing="xs">
               {Object.entries(obj)
                 .filter(([k]) => k !== "featured") // opcional: no mostrar el boolean
                 .map(([key, value]) => (
-                  <Group key={key} justify="space-between" wrap="nowrap">
+                  <Group key={key} position="apart" noWrap>
                     <Text size="sm" fw={500}>
                       {formatFieldName(key)}:
                     </Text>
@@ -274,7 +274,7 @@ export const EntityFieldRenderer: React.FC<EntityFieldRendererProps> = ({
       return (
         <SimpleGrid cols={2} spacing="xs">
           {Object.entries(obj).map(([key, value]) => (
-            <Group key={key} justify="space-between">
+            <Group key={key} position="apart">
               <Text size="sm">{formatFieldName(key)}</Text>
               <Badge color={value ? "green" : "red"} variant="light" size="sm">
                 {value ? "Sí" : "No"}
@@ -292,7 +292,7 @@ export const EntityFieldRenderer: React.FC<EntityFieldRendererProps> = ({
       )
     ) {
       return (
-        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+        <SimpleGrid cols={2} spacing="md">
           {Object.entries(obj).map(([key, value]) => (
             <Box
               key={key}
@@ -330,9 +330,9 @@ export const EntityFieldRenderer: React.FC<EntityFieldRendererProps> = ({
 
     return (
       <Card withBorder p="sm" radius="sm">
-        <Stack gap="xs">
+        <Stack spacing="xs">
           {Object.entries(obj).map(([key, value]) => (
-            <Group key={key} justify="space-between" wrap="nowrap">
+            <Group key={key} position="apart" noWrap>
               <Text size="sm" fw={500}>
                 {formatFieldName(key)}:
               </Text>
@@ -351,7 +351,7 @@ export const EntityFieldRenderer: React.FC<EntityFieldRendererProps> = ({
     if (arr.length === 0) return <Text c="dimmed">-</Text>;
 
     return (
-      <Stack gap="sm">
+      <Stack spacing="sm">
         {arr.map((item, index) => (
           <Card key={index} withBorder p="sm" radius="sm">
             <Text size="sm" fw={500} mb="xs">
@@ -387,7 +387,7 @@ export const EntityFieldRenderer: React.FC<EntityFieldRendererProps> = ({
 
       if (allPrimitives) {
         return (
-          <Group gap="xs">
+          <Group spacing="xs">
             {value.map((item, index) => (
               <Badge key={index} variant="light">
                 {String(item)}
@@ -498,7 +498,7 @@ export const EntityFieldRenderer: React.FC<EntityFieldRendererProps> = ({
 
   return (
     <Box maw={1200} mx="auto" p="md">
-      <Stack gap="xl">
+      <Stack spacing="xl">
         {orderedKeys.map((key) => (
           <Box key={key} style={{ marginBottom: "16px" }}>
             <Title order={4} mb="md" c="dark.7" fw={700}>

@@ -46,7 +46,7 @@ export const AgendaList: React.FC = () => {
         enableColumnFilter: false,
         accessorKey: "sessions",
         cell: function render({ getValue, table }) {
-          const value = getValue();
+          const value = getValue() as any[];
           return (value?.length ?? "-");
 
         }},
@@ -199,7 +199,7 @@ export const AgendaList: React.FC = () => {
         <Pagination
           position="right"
           total={pageCount}
-          page={current}
+          value={current}
           onChange={setCurrent}
         />
       </List>

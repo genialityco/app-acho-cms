@@ -50,7 +50,7 @@ export const NotificationTemplateEdit: React.FC = () => {
   });
 
   // Extrae los datos del backend
-  const { data } = queryResult;
+  const data = queryResult?.data;
 
   // Pre-popula los campos del formulario con los datos existentes
   useEffect(() => {

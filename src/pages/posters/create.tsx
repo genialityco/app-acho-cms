@@ -24,7 +24,7 @@ export const PosterCreate: React.FC = () => {
     errors,
   } = useForm({
     refineCoreProps: {
-      redirect: true,
+      redirect: "list",
     },
     initialValues: {
       title: "Investigacion Geniality"+(new Date().toString()),
@@ -58,20 +58,20 @@ export const PosterCreate: React.FC = () => {
 
   const theme = useMantineTheme();
 
-  const sanitizeFileName = (fileName) => {
+  const sanitizeFileName = (fileName: string) => {
     // Remove or replace any characters that are not letters, numbers, dots, hyphens, or underscores
     return fileName.replace(/[^a-zA-Z0-9.\-_]/g, '_');
   };
 
   // Handle file upload
-  const handleFileUpload = async (files) => {
+  const handleFileUpload = async (files: File[]) => {
     if (files.length === 0) {
       alert("No files selected!");
       return;
     }
 
     const formData = new FormData();
-    files.forEach((file) => {
+    files.forEach((file: File) => {
       const sanitizedFileName = sanitizeFileName(file.name);
       const sanitizedFile = new File([file], sanitizedFileName, { type: file.type });
       formData.append("file", sanitizedFile); // Append the file to FormData
@@ -94,14 +94,14 @@ export const PosterCreate: React.FC = () => {
   };
 
   const [inputValue, setInputValue] = useState("");
-  const handleKeyDown = (event) => {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter" && inputValue.trim()) {
       const newValue = [...values.authors, inputValue.trim()];
       getInputProps(`authors`).onChange(newValue);
       setInputValue("");
     }
   };
-  const removeTag = (tagToRemove) => {
+  const removeTag = (tagToRemove: string) => {
     const newValue = values.authors.filter((tag) => tag !== tagToRemove);
     getInputProps(`authors`).onChange(newValue);
   };

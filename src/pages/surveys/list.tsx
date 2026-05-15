@@ -1,5 +1,6 @@
 import React from "react";
 import { useTable } from "@refinedev/react-table";
+import { flexRender } from "@tanstack/react-table";
 import { List, EditButton, DeleteButton, ShowButton } from "@refinedev/mantine";
 import {
   Box,
@@ -13,7 +14,7 @@ import {
 import type { ISurvey } from "../../interfaces";
 
 export const SurveyList: React.FC = () => {
-  const columns = React.useMemo(
+  const columns = React.useMemo<import("@tanstack/react-table").ColumnDef<ISurvey>[]>(
     () => [
       {
         id: "title",
@@ -67,7 +68,7 @@ export const SurveyList: React.FC = () => {
             {getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <th key={header.id}>{header.column.columnDef.header}</th>
+                  <th key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</th>
                 ))}
               </tr>
             ))}
@@ -76,7 +77,7 @@ export const SurveyList: React.FC = () => {
             {getRowModel().rows.map((row) => (
               <tr key={row.id}>
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id}>{cell.column.columnDef.cell(cell.getContext())}</td>
+                  <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
                 ))}
               </tr>
             ))}

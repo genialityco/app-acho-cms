@@ -191,12 +191,12 @@ export const NewsCreate: React.FC = () => {
             Content
           </Text>
 
-          <Group gap="xs" mb="sm">
+          <Group spacing="xs" mb="sm">
             <Button
               type="button"
               size="xs"
               variant="light"
-              leftSection={<IconPhoto size="1rem" />}
+              leftIcon={<IconPhoto size="1rem" />}
               onClick={handleImageUploadInEditor}
               loading={loadingImage}
             >
@@ -207,7 +207,7 @@ export const NewsCreate: React.FC = () => {
               type="button"
               size="xs"
               variant="light"
-              leftSection={<IconVideo size="1rem" />}
+              leftIcon={<IconVideo size="1rem" />}
               onClick={handleVideoUploadInEditor}
               loading={loadingVideo}
             >
@@ -218,7 +218,7 @@ export const NewsCreate: React.FC = () => {
               type="button"
               size="xs"
               variant="outline"
-              leftSection={<IconPhoto size="1rem" />}
+              leftIcon={<IconPhoto size="1rem" />}
               onClick={handleImageUrlInEditor}
             >
               Imagen URL
@@ -228,7 +228,7 @@ export const NewsCreate: React.FC = () => {
               type="button"
               size="xs"
               variant="outline"
-              leftSection={<IconVideo size="1rem" />}
+              leftIcon={<IconVideo size="1rem" />}
               onClick={handleVideoUrlInEditor}
             >
               Video URL
@@ -260,6 +260,8 @@ export const NewsCreate: React.FC = () => {
         </Box>
 
         <DateTimePicker
+          onPointerEnterCapture={undefined}
+          onPointerLeaveCapture={undefined}
           mt="sm"
           label="Scheduled At"
           placeholder="Select date and time for notification"
@@ -281,7 +283,7 @@ export const NewsCreate: React.FC = () => {
             maxSize={3 * 1024 ** 2}
             accept={IMAGE_MIME_TYPE}
           >
-            <Group justify="center" gap="xl" style={{ minHeight: 120 }}>
+            <Group position="center" spacing="xl" style={{ minHeight: 120 }}>
               <Dropzone.Accept>
                 <IconUpload size="2rem" stroke={1.5} />
               </Dropzone.Accept>
@@ -350,7 +352,7 @@ export const NewsCreate: React.FC = () => {
               "video/*",
             ]}
           >
-            <Group justify="center" gap="xl" style={{ minHeight: 80 }}>
+            <Group position="center" spacing="xl" style={{ minHeight: 80 }}>
               <IconUpload size="2rem" stroke={1.5} />
               <div>
                 {docFiles.length > 0 ? (
@@ -384,7 +386,7 @@ export const NewsCreate: React.FC = () => {
               </Text>
 
               {documents.map((doc) => (
-                <Group key={doc.id} gap={8}>
+                <Group key={doc.id} spacing={8}>
                   <Text size="sm">{doc.name}</Text>
                   <a href={doc.url} target="_blank" rel="noopener noreferrer">
                     <Text size="xs" c="blue">

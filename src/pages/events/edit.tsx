@@ -96,7 +96,7 @@ export const EventEdit: React.FC = () => {
     });
 
   const { queryResult } = refineCore;
-  const { data } = queryResult;
+  const data = queryResult?.data;
 
   const { data: agendaData } = useList<IAgenda>({
     resource: "agendas",
@@ -119,7 +119,7 @@ export const EventEdit: React.FC = () => {
   };
 
   useEffect(() => {
-    if (data?.data && refineCore.form) {
+    if (data?.data) {
       const {
         name,
         description,
@@ -131,22 +131,14 @@ export const EventEdit: React.FC = () => {
         eventSections,
       } = data.data;
 
-      // Parse UTC dates from DB
       const parsedStartDate = startDate ? parseISO(startDate) : null;
       const parsedEndDate = endDate ? parseISO(endDate) : null;
 
-      // Log for debugging
-      console.log("DB startDate:", startDate, "Parsed:", parsedStartDate);
-      console.log("DB endDate:", endDate, "Parsed:", parsedEndDate);
-      console.log("Full DB data:", data.data);
-      console.log("Form initial values:", refineCore.form?.getValues());
-
-      // Set all fields explicitly
       setFieldValue("name", name || "");
       setFieldValue("description", description || "");
       setFieldValue("type", type || "CONGRESO");
-      setFieldValue("startDate", parsedStartDate);
-      setFieldValue("endDate", parsedEndDate);
+      setFieldValue("startDate", parsedStartDate as any);
+      setFieldValue("endDate", parsedEndDate as any);
       setFieldValue("location.address", location?.address || "");
       setFieldValue(
         "location.coordinates.latitude",
@@ -168,21 +160,12 @@ export const EventEdit: React.FC = () => {
       );
       setFieldValue("eventSections.posters", eventSections?.posters ?? false);
     }
-  }, [data, setFieldValue, refineCore.form]);
-
-  useEffect(() => {
-    if (refineCore.form) {
-      console.log("Form isDirty:", refineCore.form?.isDirty);
-      console.log("Current form values:", refineCore.form?.getValues());
-    } else {
-      console.log("Form not initialized yet");
-    }
-  }, [refineCore.form]);
+  }, [data, setFieldValue]);
 
   useEffect(() => {
     if (agendaData?.data && data?.data?._id) {
       const agenda = agendaData.data.find(
-        (agendaItem) => agendaItem.eventId._id === data.data._id
+        (agendaItem) => (agendaItem.eventId as any)?._id === data.data._id
       );
       setEventAgenda(agenda || null);
     }
@@ -261,7 +244,7 @@ export const EventEdit: React.FC = () => {
             onChange={(value) => {
               const utcDate = toUTCDate(value);
               console.log("Selected startDate:", value, "UTC:", utcDate);
-              setFieldValue("startDate", utcDate);
+              setFieldValue("startDate", utcDate as any);
             }}
             label="Start Date and Time"
             placeholder="Pick date and time"
@@ -279,7 +262,7 @@ export const EventEdit: React.FC = () => {
             onChange={(value) => {
               const utcDate = toUTCDate(value);
               console.log("Selected endDate:", value, "UTC:", utcDate);
-              setFieldValue("endDate", utcDate);
+              setFieldValue("endDate", utcDate as any);
             }}
             label="End Date and Time"
             placeholder="Pick date and time"

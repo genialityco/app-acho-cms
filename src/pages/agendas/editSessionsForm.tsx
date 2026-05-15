@@ -1,23 +1,42 @@
 import React, { useState } from 'react';
 import { Button, Group, MultiSelect, TextInput, Stack, Text } from '@mantine/core';
-import {DateField} from  "@refinedev/mantine";
+import { DateTimePicker } from '@mantine/dates';
 //import { v4 as uuidv4 } from 'uuid'; // for unique keys for new sessions
 
-const EditSessionsForm = ({ resource, speakersList, onSubmit }) => {
-  // Assume resource.sessions is an array of session objects
-  const [sessions, setSessions] = useState(resource?.sessions);
+interface Session {
+  _id?: string;
+  id?: number;
+  title: string;
+  startDateTime: Date | null;
+  endDateTime: Date | null;
+  speakers: string[];
+}
 
-  // Handle change in session property
-  const handleSessionChange = (index, property, value) => {
-    const updatedSessions = sessions.map((session, i) =>
+interface Speaker {
+  id: string;
+  name: string;
+}
+
+const EditSessionsForm = ({
+  resource,
+  speakersList,
+  onSubmit,
+}: {
+  resource: { sessions?: Session[] };
+  speakersList: Speaker[];
+  onSubmit: (sessions: Session[]) => void;
+}) => {
+  const [sessions, setSessions] = useState<Session[]>(resource?.sessions ?? []);
+
+  const handleSessionChange = (index: number, property: string, value: any) => {
+    const updatedSessions = sessions.map((session: Session, i: number) =>
       i === index ? { ...session, [property]: value } : session
     );
     setSessions(updatedSessions);
   };
 
-  // Add a new session to the array
   const handleAddSession = () => {
-    const newSession = {
+    const newSession: Session = {
       id: Math.random()*1000,//uuidv4(),
       title: '',
       startDateTime: null,
@@ -27,9 +46,8 @@ const EditSessionsForm = ({ resource, speakersList, onSubmit }) => {
     setSessions([...sessions, newSession]);
   };
 
-  // Remove session from the array
-  const handleRemoveSession = (index) => {
-    const updatedSessions = sessions.filter((_, i) => i !== index);
+  const handleRemoveSession = (index: number) => {
+    const updatedSessions = sessions.filter((_: Session, i: number) => i !== index);
     setSessions(updatedSessions);
   };
 
@@ -52,7 +70,7 @@ const EditSessionsForm = ({ resource, speakersList, onSubmit }) => {
 
 
 
-      {sessions.map((session, index) => (
+      {sessions.map((session: Session, index: number) => (
         <Stack key={session._id} spacing="sm" sx={{ padding: '1rem', border: '1px solid #ddd', borderRadius: '8px' }}>
           <TextInput
             label="Title"
@@ -63,17 +81,21 @@ const EditSessionsForm = ({ resource, speakersList, onSubmit }) => {
           />
 
           <Group grow>
-            <DateField 
+            <DateTimePicker
+              onPointerEnterCapture={undefined}
+              onPointerLeaveCapture={undefined}
               label="Start Date and Time"
               value={session.startDateTime}
-              onChange={(value) => handleSessionChange(index, 'startDateTime', value)}
+              onChange={(value: Date | null) => handleSessionChange(index, 'startDateTime', value)}
               placeholder="Select start date and time"
               required
             />
-            <DateField 
+            <DateTimePicker
+              onPointerEnterCapture={undefined}
+              onPointerLeaveCapture={undefined}
               label="End Date and Time"
               value={session.endDateTime}
-              onChange={(value) => handleSessionChange(index, 'endDateTime', value)}
+              onChange={(value: Date | null) => handleSessionChange(index, 'endDateTime', value)}
               placeholder="Select end date and time"
               required
             />
@@ -81,7 +103,7 @@ const EditSessionsForm = ({ resource, speakersList, onSubmit }) => {
 
           <MultiSelect
             label="Speakers"
-            data={speakersList.map((speaker) => ({ value: speaker.id, label: speaker.name }))}
+            data={speakersList.map((speaker: Speaker) => ({ value: speaker.id, label: speaker.name }))}
             value={session.speakers}
             onChange={(value) => handleSessionChange(index, 'speakers', value)}
             placeholder="Select speakers"
