@@ -39,6 +39,14 @@ export const HighlightList: React.FC = () => {
       },
     },
     {
+      id: "eventId",
+      header: "Event ID",
+      accessorKey: "eventId",
+      meta: {
+        filterOperator: "eq",
+      },
+    },
+    {
       id: "vimeoUrl",
       header: "Video",
       accessorKey: "vimeoUrl",
