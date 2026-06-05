@@ -1,4 +1,5 @@
 import { Edit, useForm, useSelect } from "@refinedev/mantine";
+import { useApiUrl } from "@refinedev/core";
 import { Select, Button, Group, TextInput, Text, Stack, MultiSelect, Badge, Textarea, Switch,useMantineTheme } from "@mantine/core";
 import MDEditor from "@uiw/react-md-editor";
 import ArrayTagInput from "../modules/arrayTagInput";
@@ -30,6 +31,7 @@ const speakersList = [
 // };
 
 export const SpeakerEdit: React.FC = () => {
+  const apiUrl = useApiUrl();
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -97,7 +99,7 @@ export const SpeakerEdit: React.FC = () => {
 
         try {
             setLoading(true);
-            const response = await axios.post('https://lobster-app-uy9hx.ondigitalocean.app/upload/image', formData, {
+            const response = await axios.post(`${apiUrl}/upload/image`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },

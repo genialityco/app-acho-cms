@@ -17,7 +17,7 @@ import { Dropzone, IMAGE_MIME_TYPE } from "@mantine/dropzone";
 import { IconPhoto } from "@tabler/icons-react";
 import axios from "axios";
 import MDEditor from "@uiw/react-md-editor";
-import { useCustom, useList, useOne } from "@refinedev/core";
+import { useApiUrl, useCustom, useList, useOne } from "@refinedev/core";
 import { IAgenda } from "../../interfaces";
 import { AgendaEdit } from "../agendas";
 import { parseISO, formatISO } from "date-fns";
@@ -25,6 +25,7 @@ import { useParams } from "react-router-dom";
 import { EVENT_TYPE_LABELS } from "../../types/eventTypes";
 
 export const EventEdit: React.FC = () => {
+  const apiUrl = useApiUrl();
   const [loadingEventImage, setLoadingEventImage] = useState(false);
   const [loadingMiniatureImage, setLoadingMiniatureImage] = useState(false);
   const [eventFiles, setEventFiles] = useState<File[]>([]);
@@ -187,7 +188,7 @@ export const EventEdit: React.FC = () => {
     try {
       setLoading(true);
       const response = await axios.post(
-        "https://lobster-app-uy9hx.ondigitalocean.app/upload/image",
+        `${apiUrl}/upload/image`,
         formData,
         {
           headers: {

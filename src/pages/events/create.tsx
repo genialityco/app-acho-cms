@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useApiUrl } from "@refinedev/core";
 import { Create, useForm } from "@refinedev/mantine";
 import {
   TextInput,
@@ -18,6 +19,7 @@ import MDEditor from "@uiw/react-md-editor";
 import { EVENT_TYPE_LABELS } from "../../types/eventTypes";
 
 export const EventCreate: React.FC = () => {
+  const apiUrl = useApiUrl();
   const [loadingEventImage, setLoadingEventImage] = useState(false);
   const [loadingMiniatureImage, setLoadingMiniatureImage] = useState(false);
   const [eventFiles, setEventFiles] = useState<File[]>([]);
@@ -76,7 +78,7 @@ export const EventCreate: React.FC = () => {
     try {
       setLoading(true);
       const response = await axios.post(
-        "https://lobster-app-uy9hx.ondigitalocean.app/upload/image",
+        `${apiUrl}/upload/image`,
         formData,
         {
           headers: {

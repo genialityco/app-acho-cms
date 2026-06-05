@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useApiUrl } from "@refinedev/core";
 import { Edit, useForm } from "@refinedev/mantine";
 import { TextInput, Textarea, Box, Button, Text, Group } from "@mantine/core";
 import { Dropzone, IMAGE_MIME_TYPE } from "@mantine/dropzone";
@@ -6,6 +7,7 @@ import { IconUpload, IconPhoto, IconX } from "@tabler/icons-react";
 import axios from "axios";
 
 export const HighlightEdit: React.FC = () => {
+  const apiUrl = useApiUrl();
   const [loadingImage, setLoadingImage] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
 
@@ -69,7 +71,7 @@ export const HighlightEdit: React.FC = () => {
     try {
       setLoadingImage(true);
       const response = await axios.post(
-        "https://lobster-app-uy9hx.ondigitalocean.app/upload/image",
+        `${apiUrl}/upload/image`,
         formData,
         {
           headers: {

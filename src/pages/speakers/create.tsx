@@ -1,4 +1,5 @@
 import { Create, useForm, useSelect } from "@refinedev/mantine";
+import { useApiUrl } from "@refinedev/core";
 import {
   Select,
   Button,
@@ -30,6 +31,7 @@ import axios from "axios";
 // };
 
 export const SpeakerCreate: React.FC = () => {
+  const apiUrl = useApiUrl();
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -96,7 +98,7 @@ export const SpeakerCreate: React.FC = () => {
 
     try {
       setLoading(true);
-      const response = await axios.post("https://lobster-app-uy9hx.ondigitalocean.app/upload/image", formData, {
+      const response = await axios.post(`${apiUrl}/upload/image`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

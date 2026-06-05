@@ -1,4 +1,5 @@
 import { Create, useForm, useSelect } from "@refinedev/mantine";
+import { useApiUrl } from "@refinedev/core";
 import { Select, Button, Group, TextInput, Text, Stack, MultiSelect, Badge, useMantineTheme, Loader } from "@mantine/core";
 import MDEditor from "@uiw/react-md-editor";
 import ArrayTagInput from "./arrayTagInput";
@@ -15,6 +16,7 @@ import axios from "axios";
 
 
 export const PosterCreate: React.FC = () => {
+  const apiUrl = useApiUrl();
   const {
     saveButtonProps,
     getInputProps,
@@ -79,7 +81,7 @@ export const PosterCreate: React.FC = () => {
 
     try {
       setLoading(true);
-      const response = await axios.post("https://lobster-app-uy9hx.ondigitalocean.app/upload/image", formData, {
+      const response = await axios.post(`${apiUrl}/upload/image`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

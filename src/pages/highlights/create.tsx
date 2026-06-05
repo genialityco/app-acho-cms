@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useApiUrl } from "@refinedev/core";
 import { Create, useForm } from "@refinedev/mantine";
 import {
   TextInput,
@@ -13,6 +14,7 @@ import { IconUpload, IconPhoto } from "@tabler/icons-react";
 import axios from "axios";
 
 export const HighlightCreate: React.FC = () => {
+  const apiUrl = useApiUrl();
   const [loadingImage, setLoadingImage] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
 
@@ -46,7 +48,7 @@ export const HighlightCreate: React.FC = () => {
     try {
       setLoadingImage(true);
       const response = await axios.post(
-        "https://lobster-app-uy9hx.ondigitalocean.app/upload/image",
+        `${apiUrl}/upload/image`,
         formData,
         {
           headers: {

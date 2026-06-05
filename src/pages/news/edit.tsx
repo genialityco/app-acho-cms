@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useApiUrl } from "@refinedev/core";
 import { Edit, useForm } from "@refinedev/mantine";
 import { TextInput, Text, Box, Group, Button } from "@mantine/core";
 import ReactQuill from "react-quill";
@@ -29,6 +30,7 @@ const normalizeDocs = (docs: any): DocItem[] => {
 };
 
 export const NewsEdit: React.FC = () => {
+  const apiUrl = useApiUrl();
   const [loadingImage, setLoadingImage] = useState(false);
   const [loadingVideo, setLoadingVideo] = useState(false);
 
@@ -112,7 +114,7 @@ export const NewsEdit: React.FC = () => {
     try {
       setLoadingImage(true);
       await insertImageFromFile(
-        "https://lobster-app-uy9hx.ondigitalocean.app/upload/image",
+        `${apiUrl}/upload/image`,
         { "Content-Type": "multipart/form-data" },
       );
     } catch (error) {
@@ -127,7 +129,7 @@ export const NewsEdit: React.FC = () => {
     try {
       setLoadingVideo(true);
       await insertVideoFromFile(
-        "https://lobster-app-uy9hx.ondigitalocean.app/upload/document",
+        `${apiUrl}/upload/document`,
         { "Content-Type": "multipart/form-data" },
       );
     } catch (error) {
@@ -157,7 +159,7 @@ export const NewsEdit: React.FC = () => {
     try {
       setLoadingImage(true);
       const response = await axios.post(
-        "https://lobster-app-uy9hx.ondigitalocean.app/upload/image",
+        `${apiUrl}/upload/image`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } },
       );
@@ -195,7 +197,7 @@ export const NewsEdit: React.FC = () => {
 
       try {
         const response = await axios.post(
-          "https://lobster-app-uy9hx.ondigitalocean.app/upload/document",
+          `${apiUrl}/upload/document`,
           formData,
           { headers: { "Content-Type": "multipart/form-data" } },
         );
