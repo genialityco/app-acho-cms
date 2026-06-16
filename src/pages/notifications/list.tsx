@@ -23,16 +23,27 @@ import {
 } from "@mantine/core";
 import { ColumnFilter, ColumnSorter } from "../../components/table";
 import type { INotificationTemplate } from "../../interfaces";
-import { useNotification, useCreate, useList, useUpdate } from "@refinedev/core";
-import { IconSend, IconUser, IconAlertTriangle, IconTrash, IconBell } from "@tabler/icons-react";
+import {
+  useNotification,
+  useCreate,
+  useList,
+  useUpdate,
+} from "@refinedev/core";
+import {
+  IconSend,
+  IconUser,
+  IconAlertTriangle,
+  IconTrash,
+  IconBell,
+} from "@tabler/icons-react";
 import { useDebouncedValue } from "@mantine/hooks";
 import { API_URL } from "../../components/dataProvider/customGenRestDataProvider";
 
 // Error Boundary Component
-const ErrorBoundary: React.FC<{ children: React.ReactNode; fallback: React.ReactNode }> = ({
-  children,
-  fallback,
-}) => {
+const ErrorBoundary: React.FC<{
+  children: React.ReactNode;
+  fallback: React.ReactNode;
+}> = ({ children, fallback }) => {
   const [hasError, setHasError] = useState(false);
 
   React.useEffect(() => {
@@ -82,7 +93,7 @@ export const NotificationTemplateList: React.FC = () => {
         ),
         enableColumnFilter: false,
       },
-       {
+      {
         id: "scheduledAt",
         header: "Scheduled At",
         accessorKey: "scheduledAt",
@@ -107,7 +118,7 @@ export const NotificationTemplateList: React.FC = () => {
         ),
       },
     ],
-    []
+    [],
   );
 
   // Configuración de la tabla
@@ -118,7 +129,13 @@ export const NotificationTemplateList: React.FC = () => {
   } = useTable<INotificationTemplate>({ columns });
 
   return (
-    <ErrorBoundary fallback={<Text color="red">Error loading notification templates. Please refresh the page.</Text>}>
+    <ErrorBoundary
+      fallback={
+        <Text color="red">
+          Error loading notification templates. Please refresh the page.
+        </Text>
+      }
+    >
       <ScrollArea>
         <List
           headerButtons={({ defaultButtons }) => (
@@ -149,27 +166,8 @@ export const NotificationTemplateList: React.FC = () => {
 const VisibleNotificationsControl: React.FC = () => {
   const { open } = useNotification();
   const [count, setCount] = useState<number | null>(null);
-  const [isLoadingCount, setIsLoadingCount] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
   const [confirmOpened, setConfirmOpened] = useState(false);
-
-  const fetchCount = React.useCallback(async () => {
-    setIsLoadingCount(true);
-    try {
-      const response = await fetch(`${API_URL}/notifications/visible/count`);
-      if (!response.ok) throw new Error(response.statusText);
-      const data = await response.json();
-      setCount(data.count ?? 0);
-    } catch (error) {
-      console.error("Error fetching visible notifications count:", error);
-    } finally {
-      setIsLoadingCount(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchCount();
-  }, [fetchCount]);
 
   const handleClear = async () => {
     setIsClearing(true);
@@ -185,7 +183,6 @@ const VisibleNotificationsControl: React.FC = () => {
         description: "Ya no se mostrarán en la app.",
       });
       setConfirmOpened(false);
-      await fetchCount();
     } catch (error: any) {
       console.error("Error clearing visible notifications:", error);
       open?.({
@@ -201,15 +198,6 @@ const VisibleNotificationsControl: React.FC = () => {
   return (
     <>
       <Group spacing="xs" noWrap>
-        <Button
-          variant="light"
-          leftIcon={<IconBell size={16} />}
-          onClick={fetchCount}
-          loading={isLoadingCount}
-          title="Notificaciones que se están viendo (clic para actualizar)"
-        >
-          Viendo: {count ?? "—"}
-        </Button>
         <Button
           color="red"
           variant="outline"
@@ -276,20 +264,27 @@ const ActionButtons: React.FC<{
   const [isLoading, setIsLoading] = useState(false);
 
   // Fetch members based on search
-  const { data: membersData, refetch, isLoading: isFetching, isError } = useList<{
+  const {
+    data: membersData,
+    refetch,
+    isLoading: isFetching,
+    isError,
+  } = useList<{
     _id: string;
     properties: { email: string };
-    user: { expoPushToken: string, _id: string } | null;
+    user: { expoPushToken: string; _id: string } | null;
   }>({
     resource: "members/searchByEmail",
     queryOptions: { enabled: false },
-    filters: debouncedSearch ? [
-      {
-        field: "properties.email",
-        operator: "contains",
-        value: debouncedSearch,
-      },
-    ] : [],
+    filters: debouncedSearch
+      ? [
+          {
+            field: "properties.email",
+            operator: "contains",
+            value: debouncedSearch,
+          },
+        ]
+      : [],
     pagination: {
       pageSize: 10,
     },
@@ -314,7 +309,9 @@ const ActionButtons: React.FC<{
   const memberOptions = React.useMemo(() => {
     if (!membersData?.data) return [];
     return membersData.data
-      .filter(member => member.properties?.email && member.user?.expoPushToken)
+      .filter(
+        (member) => member.properties?.email && member.user?.expoPushToken,
+      )
       .map((member) => ({
         value: member.properties.email,
         label: member.properties.email,
@@ -364,10 +361,13 @@ const ActionButtons: React.FC<{
     setIsLoading(true);
     try {
       // Find members corresponding to selected emails
-      const selectedMembers = membersData?.data?.filter(member =>
-        selectedEmails.includes(member.properties.email) && member.user?.expoPushToken
-      ) || [];
-      
+      const selectedMembers =
+        membersData?.data?.filter(
+          (member) =>
+            selectedEmails.includes(member.properties.email) &&
+            member.user?.expoPushToken,
+        ) || [];
+
       if (selectedMembers.length === 0) {
         open?.({
           type: "error",
@@ -385,12 +385,17 @@ const ActionButtons: React.FC<{
           data: { userId: member.user?._id || null, recordId: recordId },
           iconUrl: "",
         };
-        
-        console.log("Sending to:", member.properties.email, "Payload:", payload);
-        
+
+        console.log(
+          "Sending to:",
+          member.properties.email,
+          "Payload:",
+          payload,
+        );
+
         await createNotification({
           resource: "notifications/send",
-          values: payload, 
+          values: payload,
         });
       }
 
@@ -422,7 +427,9 @@ const ActionButtons: React.FC<{
   };
 
   return (
-    <ErrorBoundary fallback={<Text color="red">Error in actions. Please try again.</Text>}>
+    <ErrorBoundary
+      fallback={<Text color="red">Error in actions. Please try again.</Text>}
+    >
       <Group spacing="xs" noWrap>
         <ShowButton hideText recordItemId={recordId} />
         <EditButton hideText recordItemId={recordId} />
@@ -460,26 +467,33 @@ const ActionButtons: React.FC<{
             <IconAlertTriangle size={20} color="orange" />
             <Text weight={500}>Confirm Action</Text>
           </Group>
-          
+
           <Text size="sm" color="dimmed">
             Are you sure you want to send this notification to all recipients?
           </Text>
-          
-          <Box p="sm" style={{ backgroundColor: '#f8f9fa', borderRadius: '4px' }}>
-            <Text size="sm" weight={500} mb="xs">Notification Details:</Text>
-            <Text size="sm"><strong>Title:</strong> {title}</Text>
-            <Text size="sm" style={{ wordBreak: 'break-word' }}>
+
+          <Box
+            p="sm"
+            style={{ backgroundColor: "#f8f9fa", borderRadius: "4px" }}
+          >
+            <Text size="sm" weight={500} mb="xs">
+              Notification Details:
+            </Text>
+            <Text size="sm">
+              <strong>Title:</strong> {title}
+            </Text>
+            <Text size="sm" style={{ wordBreak: "break-word" }}>
               <strong>Body:</strong> {body}
             </Text>
           </Box>
-          
+
           <Text size="xs" color="red">
             This action cannot be undone.
           </Text>
-          
+
           <Group position="right" spacing="sm" mt="md">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={closeConfirmModal}
               disabled={isLoading}
             >
@@ -539,11 +553,7 @@ const ActionButtons: React.FC<{
           </Text>
         )}
         <Group position="right" spacing="sm">
-          <Button 
-            variant="outline" 
-            onClick={closeModal}
-            disabled={isLoading}
-          >
+          <Button variant="outline" onClick={closeModal} disabled={isLoading}>
             Cancel
           </Button>
           <Button
@@ -551,10 +561,9 @@ const ActionButtons: React.FC<{
             disabled={selectedEmails.length === 0 || isLoading}
             loading={isLoading}
           >
-            {isLoading 
-              ? "Sending..." 
-              : `Send to ${selectedEmails.length} recipient(s)`
-            }
+            {isLoading
+              ? "Sending..."
+              : `Send to ${selectedEmails.length} recipient(s)`}
           </Button>
         </Group>
       </Modal>
@@ -576,7 +585,7 @@ const TableHeader: React.FC<{
                 <Box>
                   {flexRender(
                     header.column.columnDef.header,
-                    header.getContext()
+                    header.getContext(),
                   )}
                 </Box>
                 <Group spacing="xs" noWrap>
