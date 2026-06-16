@@ -165,7 +165,6 @@ export const NotificationTemplateList: React.FC = () => {
 // Control de notificaciones visibles: muestra el conteo y permite vaciarlas
 const VisibleNotificationsControl: React.FC = () => {
   const { open } = useNotification();
-  const [count, setCount] = useState<number | null>(null);
   const [isClearing, setIsClearing] = useState(false);
   const [confirmOpened, setConfirmOpened] = useState(false);
 
@@ -203,8 +202,7 @@ const VisibleNotificationsControl: React.FC = () => {
           variant="outline"
           leftIcon={<IconTrash size={16} />}
           onClick={() => setConfirmOpened(true)}
-          disabled={!count}
-        >
+          >
           Vaciar
         </Button>
       </Group>
@@ -221,10 +219,6 @@ const VisibleNotificationsControl: React.FC = () => {
             <IconAlertTriangle size={20} color="orange" />
             <Text weight={500}>Confirmar acción</Text>
           </Group>
-          <Text size="sm" color="dimmed">
-            ¿Seguro que quieres vaciar las {count} notificación(es) visibles?
-            Dejarán de mostrarse en la app.
-          </Text>
           <Text size="xs" color="red">
             Esta acción no se puede deshacer.
           </Text>
