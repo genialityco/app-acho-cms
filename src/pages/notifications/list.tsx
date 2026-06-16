@@ -24,8 +24,9 @@ import {
 import { ColumnFilter, ColumnSorter } from "../../components/table";
 import type { INotificationTemplate } from "../../interfaces";
 import { useNotification, useCreate, useList, useUpdate } from "@refinedev/core";
-import { IconSend, IconUser, IconAlertTriangle } from "@tabler/icons-react";
+import { IconSend, IconUser, IconAlertTriangle, IconTrash, IconBell } from "@tabler/icons-react";
 import { useDebouncedValue } from "@mantine/hooks";
+import { API_URL } from "../../components/dataProvider/customGenRestDataProvider";
 
 // Error Boundary Component
 const ErrorBoundary: React.FC<{ children: React.ReactNode; fallback: React.ReactNode }> = ({
@@ -119,7 +120,14 @@ export const NotificationTemplateList: React.FC = () => {
   return (
     <ErrorBoundary fallback={<Text color="red">Error loading notification templates. Please refresh the page.</Text>}>
       <ScrollArea>
-        <List>
+        <List
+          headerButtons={({ defaultButtons }) => (
+            <>
+              <VisibleNotificationsControl />
+              {defaultButtons}
+            </>
+          )}
+        >
           <Table highlightOnHover verticalSpacing="sm" striped>
             <TableHeader getHeaderGroups={getHeaderGroups} />
             <TableBody getRowModel={getRowModel} />
@@ -134,6 +142,119 @@ export const NotificationTemplateList: React.FC = () => {
         </List>
       </ScrollArea>
     </ErrorBoundary>
+  );
+};
+
+// Control de notificaciones visibles: muestra el conteo y permite vaciarlas
+const VisibleNotificationsControl: React.FC = () => {
+  const { open } = useNotification();
+  const [count, setCount] = useState<number | null>(null);
+  const [isLoadingCount, setIsLoadingCount] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
+  const [confirmOpened, setConfirmOpened] = useState(false);
+
+  const fetchCount = React.useCallback(async () => {
+    setIsLoadingCount(true);
+    try {
+      const response = await fetch(`${API_URL}/notifications/visible/count`);
+      if (!response.ok) throw new Error(response.statusText);
+      const data = await response.json();
+      setCount(data.count ?? 0);
+    } catch (error) {
+      console.error("Error fetching visible notifications count:", error);
+    } finally {
+      setIsLoadingCount(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCount();
+  }, [fetchCount]);
+
+  const handleClear = async () => {
+    setIsClearing(true);
+    try {
+      const response = await fetch(`${API_URL}/notifications/clear-visible`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!response.ok) throw new Error(response.statusText);
+      open?.({
+        type: "success",
+        message: "Notificaciones vaciadas",
+        description: "Ya no se mostrarán en la app.",
+      });
+      setConfirmOpened(false);
+      await fetchCount();
+    } catch (error: any) {
+      console.error("Error clearing visible notifications:", error);
+      open?.({
+        type: "error",
+        message: "Error al vaciar las notificaciones",
+        description: error.message || "Ocurrió un error",
+      });
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
+  return (
+    <>
+      <Group spacing="xs" noWrap>
+        <Button
+          variant="light"
+          leftIcon={<IconBell size={16} />}
+          onClick={fetchCount}
+          loading={isLoadingCount}
+          title="Notificaciones que se están viendo (clic para actualizar)"
+        >
+          Viendo: {count ?? "—"}
+        </Button>
+        <Button
+          color="red"
+          variant="outline"
+          leftIcon={<IconTrash size={16} />}
+          onClick={() => setConfirmOpened(true)}
+          disabled={!count}
+        >
+          Vaciar
+        </Button>
+      </Group>
+
+      <Modal
+        opened={confirmOpened}
+        onClose={() => setConfirmOpened(false)}
+        title="Vaciar notificaciones"
+        centered
+        size="sm"
+      >
+        <Stack spacing="md">
+          <Group spacing="xs">
+            <IconAlertTriangle size={20} color="orange" />
+            <Text weight={500}>Confirmar acción</Text>
+          </Group>
+          <Text size="sm" color="dimmed">
+            ¿Seguro que quieres vaciar las {count} notificación(es) visibles?
+            Dejarán de mostrarse en la app.
+          </Text>
+          <Text size="xs" color="red">
+            Esta acción no se puede deshacer.
+          </Text>
+          <Group position="right" spacing="sm" mt="md">
+            <Button
+              variant="outline"
+              onClick={() => setConfirmOpened(false)}
+              disabled={isClearing}
+            >
+              Cancelar
+            </Button>
+            <Button color="red" onClick={handleClear} loading={isClearing}>
+              {isClearing ? "Vaciando..." : "Vaciar"}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+    </>
   );
 };
 
