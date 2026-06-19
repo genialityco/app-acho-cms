@@ -17,9 +17,9 @@ import dayjs from "dayjs";
 
 // ─── Calendar grid constants ─────────────────────────────────────────────────
 const HOUR_PX = 64;   // pixels per hour
-const START_HOUR = 7;
-const END_HOUR = 19;
-const TOTAL_HOURS = END_HOUR - START_HOUR; // 12
+// Rango por defecto cuando un día aún no tiene sesiones (para poder agregar).
+const DEFAULT_START_HOUR = 7;
+const DEFAULT_END_HOUR = 19;
 const TIME_COL_W = 56; // px width of the left time-label column
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -136,8 +136,33 @@ function layoutSessions(items: Array<{ session: Session; idx: number }>) {
 /** Minutes from midnight for a dayjs value */
 function toMin(d: dayjs.Dayjs) { return d.hour() * 60 + d.minute(); }
 
-/** Top offset in pixels for a given minute-from-midnight */
-function minuteToTop(min: number) { return (min - START_HOUR * 60) * HOUR_PX / 60; }
+/** Top offset in pixels for a given minute-from-midnight, relativo al inicio del día */
+function minuteToTop(min: number, startHour: number) { return (min - startHour * 60) * HOUR_PX / 60; }
+
+/**
+ * Calcula el rango de horas a mostrar para un día según sus sesiones (y subsesiones).
+ * Si el día no tiene sesiones, usa el rango por defecto para poder agregar.
+ * El inicio se redondea hacia abajo y el fin hacia arriba a la hora completa.
+ */
+function getDayHourRange(daySessions: Array<{ session: Session }>): { startHour: number; endHour: number } {
+  if (daySessions.length === 0) {
+    return { startHour: DEFAULT_START_HOUR, endHour: DEFAULT_END_HOUR };
+  }
+  let minMin = Infinity;
+  let maxMin = -Infinity;
+  daySessions.forEach(({ session }) => {
+    minMin = Math.min(minMin, toMin(dayjs(session.startDateTime)));
+    maxMin = Math.max(maxMin, toMin(dayjs(session.endDateTime)));
+    (session.subSessions || []).forEach((sub) => {
+      minMin = Math.min(minMin, toMin(dayjs(sub.startDateTime)));
+      maxMin = Math.max(maxMin, toMin(dayjs(sub.endDateTime)));
+    });
+  });
+  const startHour = Math.floor(minMin / 60);
+  let endHour = Math.ceil(maxMin / 60);
+  if (endHour <= startHour) endHour = startHour + 1; // siempre al menos 1 hora de alto
+  return { startHour, endHour };
+}
 
 // ─── Form conversion helpers ──────────────────────────────────────────────────
 function sessionToForm(s: Session): SessionFormState {
@@ -236,13 +261,13 @@ export const AgendaCalendarEditor: React.FC<AgendaCalendarEditorProps> = ({
   }, [sessions]);
 
   // ── Handlers ────────────────────────────────────────────────────────────────
-  const openAdd = (day: Date, hour: number, minute: number) => {
+  const openAdd = (day: Date, hour: number, minute: number, dayEndHour: number) => {
     const nextMin = minute + 30;
     const endH = nextMin >= 60 ? hour + 1 : hour;
     const endM = nextMin >= 60 ? 0 : nextMin;
     setSlotDay(day);
     setEditingIndex(null);
-    setForm({ ...EMPTY_FORM, startTime: padTime(hour, minute), endTime: endH > 19 ? "19:00" : padTime(endH, endM) });
+    setForm({ ...EMPTY_FORM, startTime: padTime(hour, minute), endTime: endH > dayEndHour ? padTime(dayEndHour, 0) : padTime(endH, endM) });
     setModalOpen(true);
   };
 
@@ -326,26 +351,28 @@ export const AgendaCalendarEditor: React.FC<AgendaCalendarEditorProps> = ({
             const dayKey = dayjs(day).format("YYYY-MM-DD");
             const daySessions = sessionsByDay[dayKey] || [];
             const laidOut = layoutSessions(daySessions);
+            const { startHour, endHour } = getDayHourRange(daySessions);
+            const totalHours = endHour - startHour;
 
             return (
               <Tabs.Panel key={dayIdx} value={String(dayIdx)} pt="sm">
                 <Text color="dimmed" size="xs" mb="sm">{formatFull(dayjs(day))}</Text>
 
                 {/* ── Calendar grid ── */}
-                <div style={{ position: "relative", border: "1px solid #dee2e6", borderRadius: 8, overflow: "hidden", height: TOTAL_HOURS * HOUR_PX }}>
+                <div style={{ position: "relative", border: "1px solid #dee2e6", borderRadius: 8, overflow: "hidden", height: totalHours * HOUR_PX }}>
 
                   {/* Hour / half-hour background rows (clickable to add session) */}
-                  {Array.from({ length: TOTAL_HOURS * 2 + 1 }, (_, i) => {
-                    const h = START_HOUR + Math.floor(i / 2);
+                  {Array.from({ length: totalHours * 2 + 1 }, (_, i) => {
+                    const h = startHour + Math.floor(i / 2);
                     const m = (i % 2) * 30;
                     const top = i * (HOUR_PX / 2);
                     const isHour = i % 2 === 0;
-                    const isLast = i === TOTAL_HOURS * 2;
+                    const isLast = i === totalHours * 2;
 
                     return (
                       <div
                         key={i}
-                        onClick={isLast ? undefined : () => openAdd(day, h, m)}
+                        onClick={isLast ? undefined : () => openAdd(day, h, m, endHour)}
                         title={isLast ? undefined : `Agregar sesión a las ${padTime(h, m)}`}
                         style={{
                           position: "absolute",
@@ -375,7 +402,7 @@ export const AgendaCalendarEditor: React.FC<AgendaCalendarEditorProps> = ({
                           backgroundColor: isHour ? "#f9fafb" : "transparent",
                           boxSizing: "border-box",
                         }}>
-                          {isHour && h <= END_HOUR ? padTime(h, 0) : ""}
+                          {isHour && h <= endHour ? padTime(h, 0) : ""}
                         </div>
                         {/* Clickable zone */}
                         <div style={{ flex: 1, borderLeft: "2px solid #dee2e6", backgroundColor: isHour ? "#f9fafb" : "transparent" }} />
@@ -389,7 +416,7 @@ export const AgendaCalendarEditor: React.FC<AgendaCalendarEditorProps> = ({
                     const end = dayjs(session.endDateTime);
                     const startM = toMin(start);
                     const endM = toMin(end);
-                    const top = minuteToTop(startM);
+                    const top = minuteToTop(startM, startHour);
                     const height = Math.max((endM - startM) * HOUR_PX / 60, HOUR_PX / 2);
                     const colFrac = 1 / totalCols;
                     const gutter = 4;
