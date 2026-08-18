@@ -1,8 +1,8 @@
 import type { DataProvider, LogicalFilter } from "@refinedev/core";
 import dataProvider from "@refinedev/simple-rest";
 
-//export const API_URL = "https://achoapi.geniality.com.co"
-export const API_URL = "http://192.168.40.25:3000";
+export const API_URL = "https://achoapi.geniality.com.co"
+//export const API_URL = "http://192.168.40.25:3000";
 //export const API_URL ="http://localhost:3000"; // URL del backend
 
 // Inicializa el dataProvider original de simple-rest
