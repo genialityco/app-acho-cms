@@ -122,6 +122,9 @@ export interface INotificationTemplate {
   totalSent: number;
   createdAt: string;
   updatedAt: string;
+  sentAt?: string | null;
+  scheduledAt?: string | null;
+  recipientEmails?: string[];
 }
 
 export interface IHighlight {

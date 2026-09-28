@@ -32,6 +32,7 @@ import {
   useCreate,
   useList,
   useUpdate,
+  useInvalidate,
 } from "@refinedev/core";
 import {
   IconSend,
@@ -108,6 +109,21 @@ export const NotificationTemplateList: React.FC = () => {
         enableColumnFilter: false,
       },
       {
+        id: "recipientEmails",
+        header: "Destinatarios",
+        accessorKey: "recipientEmails",
+        cell: ({ getValue }) => {
+          const list = (getValue() as string[] | undefined) || [];
+          return list.length ? (
+            <Badge color="blue">Lista ({list.length})</Badge>
+          ) : (
+            <Badge color="gray">Todos</Badge>
+          );
+        },
+        enableColumnFilter: false,
+        enableSorting: false,
+      },
+      {
         id: "actions",
         header: "Actions",
         accessorKey: "_id",
@@ -119,6 +135,7 @@ export const NotificationTemplateList: React.FC = () => {
             isSent={false}
             title={row.original.title}
             body={row.original.body}
+            template={row.original}
           />
         ),
       },
@@ -207,7 +224,7 @@ const VisibleNotificationsControl: React.FC = () => {
           variant="outline"
           leftIcon={<IconTrash size={16} />}
           onClick={() => setConfirmOpened(true)}
-          >
+        >
           Vaciar
         </Button>
       </Group>
@@ -251,7 +268,8 @@ const ActionButtons: React.FC<{
   isSent: boolean;
   title: string;
   body: string;
-}> = ({ recordId, isSent, title, body }) => {
+  template: INotificationTemplate;
+}> = ({ recordId, isSent, title, body, template }) => {
   const { open } = useNotification();
   const { mutate: createNotification } = useCreate();
   const { mutate } = useUpdate();
@@ -454,7 +472,7 @@ const ActionButtons: React.FC<{
         <ActionIcon
           variant="default"
           onClick={() => setListModalOpened(true)}
-          title="Enviar a una lista de correos"
+          title="Lista de destinatarios del envío programado"
           disabled={isLoading}
         >
           <IconListCheck />
@@ -465,9 +483,7 @@ const ActionButtons: React.FC<{
       <SendToListModal
         opened={listModalOpened}
         onClose={() => setListModalOpened(false)}
-        recordId={recordId}
-        title={title}
-        body={body}
+        template={template}
       />
 
       {/* Modal de confirmación para envío masivo */}
@@ -609,44 +625,56 @@ type ListResult = {
   sent: number;
   failed: { email: string; message: string }[];
   withoutApp: string[];
-  invalid: string[];
-  sharedToken: string[];
 };
 
-// Envío del template a una lista de correos: pegar/cargar -> revisar -> enviar
+// Lista de destinatarios del template: pegar/cargar -> revisar -> enviar ahora,
+// o guardar para que el cron la envíe a la hora programada.
 const SendToListModal: React.FC<{
   opened: boolean;
   onClose: () => void;
-  recordId: string;
-  title: string;
-  body: string;
-}> = ({ opened, onClose, recordId, title, body }) => {
+  template: INotificationTemplate;
+}> = ({ opened, onClose, template }) => {
   const { open } = useNotification();
+  const invalidate = useInvalidate();
+  const savedList = template.recipientEmails || [];
   const [text, setText] = useState("");
   const [preview, setPreview] = useState<ListPreview | null>(null);
-  const [result, setResult] = useState<ListResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [confirmSend, setConfirmSend] = useState(false);
+  const [result, setResult] = useState<ListResult | null>(null);
+
+  useEffect(() => {
+    if (opened) {
+      setText(savedList.join("\n"));
+      setPreview(null);
+      setConfirmSend(false);
+      setResult(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [opened]);
 
   const emails = React.useMemo(() => parseEmails(text), [text]);
-
-  const reset = () => {
-    setText("");
-    setPreview(null);
-    setResult(null);
-  };
+  const scheduledAt = template.scheduledAt
+    ? new Date(template.scheduledAt)
+    : null;
 
   const handleClose = () => {
-    if (loading) return;
-    reset();
-    onClose();
+    if (!loading) onClose();
   };
 
-  const post = async (path: string) => {
-    const response = await fetch(`${API_URL}/notifications/${path}/${recordId}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ emails }),
-    });
+  const request = async (
+    method: "POST" | "PUT",
+    path: string,
+    list: string[],
+  ) => {
+    const response = await fetch(
+      `${API_URL}/notifications/${path}/${template._id}`,
+      {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emails: list }),
+      },
+    );
     const json = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(json?.message || response.statusText);
     return json;
@@ -655,25 +683,58 @@ const SendToListModal: React.FC<{
   const handlePreview = async () => {
     setLoading(true);
     try {
-      setPreview(await post("preview-list"));
+      setPreview(await request("POST", "preview-list", emails));
     } catch (error: any) {
-      open?.({ type: "error", message: "Error al revisar la lista", description: error.message });
+      open?.({
+        type: "error",
+        message: "Error al revisar la lista",
+        description: error.message,
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSend = async () => {
+  const save = async (list: string[]) => {
     setLoading(true);
     try {
-      const res: ListResult = await post("send-to-list");
+      const res = await request("PUT", "recipients", list);
+      invalidate({ resource: "notification-templates", invalidates: ["list"] });
+      open?.({
+        type: "success",
+        message: list.length
+          ? `Lista guardada: ${res.withApp.length} recibirán la notificación`
+          : "Lista quitada: el template se enviará a todos",
+      });
+      onClose();
+    } catch (error: any) {
+      open?.({
+        type: "error",
+        message: "Error al guardar la lista",
+        description: error.message,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendNow = async () => {
+    setLoading(true);
+    try {
+      const res: ListResult = await request("POST", "send-to-list", emails);
       setResult(res);
+      setConfirmSend(false);
+      invalidate({ resource: "notification-templates", invalidates: ["list"] });
       open?.({
         type: "success",
         message: `Notificación enviada a ${res.sent} usuario(s)`,
       });
     } catch (error: any) {
-      open?.({ type: "error", message: "Error al enviar", description: error.message });
+      open?.({
+        type: "error",
+        message: "Error al enviar",
+        description: error.message,
+      });
     } finally {
       setLoading(false);
     }
@@ -685,11 +746,11 @@ const SendToListModal: React.FC<{
     setPreview(null);
   };
 
-  const EmailGroup: React.FC<{ label: string; color: string; items: string[] }> = ({
-    label,
-    color,
-    items,
-  }) =>
+  const EmailGroup: React.FC<{
+    label: string;
+    color: string;
+    items: string[];
+  }> = ({ label, color, items }) =>
     items.length ? (
       <Box>
         <Group spacing="xs" mb={4}>
@@ -707,19 +768,59 @@ const SendToListModal: React.FC<{
     ) : null;
 
   return (
-    <Modal opened={opened} onClose={handleClose} title="Enviar a una lista de correos" centered size="lg">
+    <Modal
+      opened={opened}
+      onClose={handleClose}
+      title="Lista de destinatarios"
+      centered
+      size="lg"
+    >
       <Stack spacing="md">
         <Box p="sm" style={{ backgroundColor: "#f8f9fa", borderRadius: 4 }}>
           <Text size="sm">
-            <strong>Título:</strong> {title}
+            <strong>Título:</strong> {template.title}
           </Text>
           <Text size="sm" style={{ wordBreak: "break-word" }}>
-            <strong>Mensaje:</strong> {body}
+            <strong>Mensaje:</strong> {template.body}
+          </Text>
+          <Text size="sm">
+            <strong>Envío programado:</strong>{" "}
+            {scheduledAt ? scheduledAt.toLocaleString() : "sin programar"}
+          </Text>
+          <Text size="sm">
+            <strong>Destinatarios actuales:</strong>{" "}
+            {savedList.length
+              ? `lista de ${savedList.length} correo(s)`
+              : "todos los usuarios"}
           </Text>
         </Box>
 
-        {!result && (
+        {result ? (
+          <Stack spacing="sm">
+            <Alert color="green">Enviadas correctamente: {result.sent}</Alert>
+            <EmailGroup
+              label="Fallaron"
+              color="red"
+              items={result.failed.map((f) => `${f.email} (${f.message})`)}
+            />
+            <EmailGroup
+              label="No tienen la app instalada"
+              color="gray"
+              items={result.withoutApp}
+            />
+            <Group position="right">
+              <Button onClick={onClose}>Cerrar</Button>
+            </Group>
+          </Stack>
+        ) : (
           <>
+            {template.isSent && (
+              <Alert color="gray">
+                Este template ya fue enviado: el envío programado ya no aplica,
+                pero puedes usar "Enviar ahora".
+              </Alert>
+            )}
+
             <Textarea
               label="Correos"
               description="Pega los correos (uno por línea, o separados por coma) o carga un archivo .txt / .csv"
@@ -734,9 +835,17 @@ const SendToListModal: React.FC<{
               disabled={loading}
             />
             <Group position="apart">
-              <FileButton onChange={handleFile} accept=".txt,.csv,text/plain,text/csv">
+              <FileButton
+                onChange={handleFile}
+                accept=".txt,.csv,text/plain,text/csv"
+              >
                 {(props) => (
-                  <Button variant="subtle" size="xs" {...props} disabled={loading}>
+                  <Button
+                    variant="subtle"
+                    size="xs"
+                    {...props}
+                    disabled={loading}
+                  >
                     Cargar archivo
                   </Button>
                 )}
@@ -745,55 +854,136 @@ const SendToListModal: React.FC<{
                 {emails.length} correo(s) detectado(s)
               </Text>
             </Group>
+
+            {preview && (
+              <Stack spacing="sm">
+                <EmailGroup
+                  label="Recibirán la notificación (tienen la app)"
+                  color="green"
+                  items={preview.withApp}
+                />
+                <EmailGroup
+                  label="No tienen la app instalada"
+                  color="gray"
+                  items={preview.withoutApp}
+                />
+                <EmailGroup
+                  label="Comparten dispositivo con otro correo de la lista (se envía una vez)"
+                  color="blue"
+                  items={preview.sharedToken}
+                />
+                <EmailGroup
+                  label="Correos inválidos (no se guardan)"
+                  color="red"
+                  items={preview.invalid}
+                />
+                <Alert color="blue">
+                  <strong>Enviar ahora:</strong> la envía de inmediato a estos{" "}
+                  {preview.withApp.length} usuario(s).
+                  <br />
+                  <strong>Guardar para envío programado:</strong> el envío
+                  {scheduledAt
+                    ? ` del ${scheduledAt.toLocaleString()}`
+                    : ""}{" "}
+                  irá solo a esta lista, no a todos. La app se revisa de nuevo
+                  al momento del envío.
+                </Alert>
+                {!template.isSent && !scheduledAt && (
+                  <Alert color="orange" icon={<IconAlertTriangle size={16} />}>
+                    El template no tiene fecha programada: para usar el envío
+                    programado, edítalo y asigna una.
+                  </Alert>
+                )}
+              </Stack>
+            )}
+
+            <Group position="apart">
+              <Box>
+                {savedList.length > 0 && (
+                  <Button
+                    color="red"
+                    variant="subtle"
+                    onClick={() => save([])}
+                    disabled={loading}
+                  >
+                    Quitar lista (enviar a todos)
+                  </Button>
+                )}
+              </Box>
+              <Group spacing="sm">
+                <Button
+                  variant="outline"
+                  onClick={handleClose}
+                  disabled={loading}
+                >
+                  Cancelar
+                </Button>
+                {!preview ? (
+                  <Button
+                    onClick={handlePreview}
+                    loading={loading}
+                    disabled={emails.length === 0}
+                  >
+                    Revisar lista
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      variant="light"
+                      onClick={() => save(emails)}
+                      loading={loading && !confirmSend}
+                      disabled={
+                        preview.withApp.length === 0 ||
+                        template.isSent ||
+                        loading
+                      }
+                    >
+                      Guardar para envío programado
+                    </Button>
+                    <Button
+                      leftIcon={<IconSend size={16} />}
+                      onClick={() => setConfirmSend(true)}
+                      disabled={preview.withApp.length === 0 || loading}
+                    >
+                      Enviar ahora
+                    </Button>
+                  </>
+                )}
+              </Group>
+            </Group>
+
+            {confirmSend && preview && (
+              <Alert
+                color="orange"
+                icon={<IconAlertTriangle size={16} />}
+                title="Confirmar envío inmediato"
+              >
+                <Text size="sm" mb="sm">
+                  Se enviará ahora a {preview.withApp.length} usuario(s). Esta
+                  acción no se puede deshacer.
+                </Text>
+                <Group position="right" spacing="sm">
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    onClick={() => setConfirmSend(false)}
+                    disabled={loading}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    size="xs"
+                    color="orange"
+                    onClick={handleSendNow}
+                    loading={loading}
+                  >
+                    Sí, enviar ahora
+                  </Button>
+                </Group>
+              </Alert>
+            )}
           </>
         )}
-
-        {preview && !result && (
-          <Stack spacing="sm">
-            <EmailGroup label="Recibirán la notificación (tienen la app)" color="green" items={preview.withApp} />
-            <EmailGroup label="No tienen la app instalada" color="gray" items={preview.withoutApp} />
-            <EmailGroup label="Comparten dispositivo con otro correo de la lista (se envía una vez)" color="blue" items={preview.sharedToken} />
-            <EmailGroup label="Correos inválidos" color="red" items={preview.invalid} />
-            <Alert color="orange" icon={<IconAlertTriangle size={16} />}>
-              Se enviará a {preview.withApp.length} usuario(s). La plantilla quedará marcada como enviada y no se
-              enviará de forma programada a todos. Esta acción no se puede deshacer.
-            </Alert>
-          </Stack>
-        )}
-
-        {result && (
-          <Stack spacing="sm">
-            <Alert color="green">Enviadas correctamente: {result.sent}</Alert>
-            <EmailGroup
-              label="Fallaron"
-              color="red"
-              items={result.failed.map((f) => `${f.email} (${f.message})`)}
-            />
-            <EmailGroup label="No tienen la app instalada" color="gray" items={result.withoutApp} />
-          </Stack>
-        )}
-
-        <Group position="right" spacing="sm">
-          <Button variant="outline" onClick={handleClose} disabled={loading}>
-            {result ? "Cerrar" : "Cancelar"}
-          </Button>
-          {!result && !preview && (
-            <Button onClick={handlePreview} loading={loading} disabled={emails.length === 0}>
-              Revisar lista
-            </Button>
-          )}
-          {!result && preview && (
-            <Button
-              color="blue"
-              leftIcon={<IconSend size={16} />}
-              onClick={handleSend}
-              loading={loading}
-              disabled={preview.withApp.length === 0}
-            >
-              Enviar a {preview.withApp.length}
-            </Button>
-          )}
-        </Group>
       </Stack>
     </Modal>
   );
