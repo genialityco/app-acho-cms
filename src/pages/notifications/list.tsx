@@ -20,6 +20,10 @@ import {
   Text,
   Loader,
   Stack,
+  Textarea,
+  Alert,
+  Badge,
+  FileButton,
 } from "@mantine/core";
 import { ColumnFilter, ColumnSorter } from "../../components/table";
 import type { INotificationTemplate } from "../../interfaces";
@@ -35,6 +39,7 @@ import {
   IconAlertTriangle,
   IconTrash,
   IconBell,
+  IconListCheck,
 } from "@tabler/icons-react";
 import { useDebouncedValue } from "@mantine/hooks";
 import { API_URL } from "../../components/dataProvider/customGenRestDataProvider";
@@ -252,6 +257,7 @@ const ActionButtons: React.FC<{
   const { mutate } = useUpdate();
   const [modalOpened, setModalOpened] = useState(false);
   const [confirmModalOpened, setConfirmModalOpened] = useState(false);
+  const [listModalOpened, setListModalOpened] = useState(false);
   const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const [debouncedSearch] = useDebouncedValue(searchValue, 300);
@@ -445,8 +451,24 @@ const ActionButtons: React.FC<{
         >
           <IconUser />
         </ActionIcon>
+        <ActionIcon
+          variant="default"
+          onClick={() => setListModalOpened(true)}
+          title="Enviar a una lista de correos"
+          disabled={isLoading}
+        >
+          <IconListCheck />
+        </ActionIcon>
         <DeleteButton hideText recordItemId={recordId} />
       </Group>
+
+      <SendToListModal
+        opened={listModalOpened}
+        onClose={() => setListModalOpened(false)}
+        recordId={recordId}
+        title={title}
+        body={body}
+      />
 
       {/* Modal de confirmación para envío masivo */}
       <Modal
@@ -562,6 +584,218 @@ const ActionButtons: React.FC<{
         </Group>
       </Modal>
     </ErrorBoundary>
+  );
+};
+
+// Extrae los correos de un texto pegado o de un archivo (una columna, CSV, separados por coma o salto de línea)
+const parseEmails = (text: string): string[] =>
+  Array.from(
+    new Set(
+      (text.match(/[^\s,;<>"']+@[^\s,;<>"']+\.[^\s,;<>"']+/g) || []).map((e) =>
+        e.trim().toLowerCase(),
+      ),
+    ),
+  );
+
+type ListPreview = {
+  totalEmails: number;
+  withApp: string[];
+  withoutApp: string[];
+  invalid: string[];
+  sharedToken: string[];
+};
+
+type ListResult = {
+  sent: number;
+  failed: { email: string; message: string }[];
+  withoutApp: string[];
+  invalid: string[];
+  sharedToken: string[];
+};
+
+// Envío del template a una lista de correos: pegar/cargar -> revisar -> enviar
+const SendToListModal: React.FC<{
+  opened: boolean;
+  onClose: () => void;
+  recordId: string;
+  title: string;
+  body: string;
+}> = ({ opened, onClose, recordId, title, body }) => {
+  const { open } = useNotification();
+  const [text, setText] = useState("");
+  const [preview, setPreview] = useState<ListPreview | null>(null);
+  const [result, setResult] = useState<ListResult | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const emails = React.useMemo(() => parseEmails(text), [text]);
+
+  const reset = () => {
+    setText("");
+    setPreview(null);
+    setResult(null);
+  };
+
+  const handleClose = () => {
+    if (loading) return;
+    reset();
+    onClose();
+  };
+
+  const post = async (path: string) => {
+    const response = await fetch(`${API_URL}/notifications/${path}/${recordId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ emails }),
+    });
+    const json = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(json?.message || response.statusText);
+    return json;
+  };
+
+  const handlePreview = async () => {
+    setLoading(true);
+    try {
+      setPreview(await post("preview-list"));
+    } catch (error: any) {
+      open?.({ type: "error", message: "Error al revisar la lista", description: error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSend = async () => {
+    setLoading(true);
+    try {
+      const res: ListResult = await post("send-to-list");
+      setResult(res);
+      open?.({
+        type: "success",
+        message: `Notificación enviada a ${res.sent} usuario(s)`,
+      });
+    } catch (error: any) {
+      open?.({ type: "error", message: "Error al enviar", description: error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFile = async (file: File | null) => {
+    if (!file) return;
+    setText(await file.text());
+    setPreview(null);
+  };
+
+  const EmailGroup: React.FC<{ label: string; color: string; items: string[] }> = ({
+    label,
+    color,
+    items,
+  }) =>
+    items.length ? (
+      <Box>
+        <Group spacing="xs" mb={4}>
+          <Badge color={color}>{items.length}</Badge>
+          <Text size="sm" weight={500}>
+            {label}
+          </Text>
+        </Group>
+        <Box style={{ maxHeight: 120, overflowY: "auto" }}>
+          <Text size="xs" color="dimmed" style={{ wordBreak: "break-all" }}>
+            {items.join(", ")}
+          </Text>
+        </Box>
+      </Box>
+    ) : null;
+
+  return (
+    <Modal opened={opened} onClose={handleClose} title="Enviar a una lista de correos" centered size="lg">
+      <Stack spacing="md">
+        <Box p="sm" style={{ backgroundColor: "#f8f9fa", borderRadius: 4 }}>
+          <Text size="sm">
+            <strong>Título:</strong> {title}
+          </Text>
+          <Text size="sm" style={{ wordBreak: "break-word" }}>
+            <strong>Mensaje:</strong> {body}
+          </Text>
+        </Box>
+
+        {!result && (
+          <>
+            <Textarea
+              label="Correos"
+              description="Pega los correos (uno por línea, o separados por coma) o carga un archivo .txt / .csv"
+              minRows={6}
+              maxRows={12}
+              autosize
+              value={text}
+              onChange={(e) => {
+                setText(e.currentTarget.value);
+                setPreview(null);
+              }}
+              disabled={loading}
+            />
+            <Group position="apart">
+              <FileButton onChange={handleFile} accept=".txt,.csv,text/plain,text/csv">
+                {(props) => (
+                  <Button variant="subtle" size="xs" {...props} disabled={loading}>
+                    Cargar archivo
+                  </Button>
+                )}
+              </FileButton>
+              <Text size="sm" color="dimmed">
+                {emails.length} correo(s) detectado(s)
+              </Text>
+            </Group>
+          </>
+        )}
+
+        {preview && !result && (
+          <Stack spacing="sm">
+            <EmailGroup label="Recibirán la notificación (tienen la app)" color="green" items={preview.withApp} />
+            <EmailGroup label="No tienen la app instalada" color="gray" items={preview.withoutApp} />
+            <EmailGroup label="Comparten dispositivo con otro correo de la lista (se envía una vez)" color="blue" items={preview.sharedToken} />
+            <EmailGroup label="Correos inválidos" color="red" items={preview.invalid} />
+            <Alert color="orange" icon={<IconAlertTriangle size={16} />}>
+              Se enviará a {preview.withApp.length} usuario(s). La plantilla quedará marcada como enviada y no se
+              enviará de forma programada a todos. Esta acción no se puede deshacer.
+            </Alert>
+          </Stack>
+        )}
+
+        {result && (
+          <Stack spacing="sm">
+            <Alert color="green">Enviadas correctamente: {result.sent}</Alert>
+            <EmailGroup
+              label="Fallaron"
+              color="red"
+              items={result.failed.map((f) => `${f.email} (${f.message})`)}
+            />
+            <EmailGroup label="No tienen la app instalada" color="gray" items={result.withoutApp} />
+          </Stack>
+        )}
+
+        <Group position="right" spacing="sm">
+          <Button variant="outline" onClick={handleClose} disabled={loading}>
+            {result ? "Cerrar" : "Cancelar"}
+          </Button>
+          {!result && !preview && (
+            <Button onClick={handlePreview} loading={loading} disabled={emails.length === 0}>
+              Revisar lista
+            </Button>
+          )}
+          {!result && preview && (
+            <Button
+              color="blue"
+              leftIcon={<IconSend size={16} />}
+              onClick={handleSend}
+              loading={loading}
+              disabled={preview.withApp.length === 0}
+            >
+              Enviar a {preview.withApp.length}
+            </Button>
+          )}
+        </Group>
+      </Stack>
+    </Modal>
   );
 };
 
