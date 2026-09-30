@@ -96,6 +96,7 @@ export interface INews {
   createdAt: string;
   updatedAt: string;
   isPublic?: boolean;
+  redirectUrl?: string | null;
 }
 
 export interface IMember {

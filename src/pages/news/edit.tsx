@@ -5,11 +5,17 @@ import { TextInput, Text, Box, Group, Button } from "@mantine/core";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { Dropzone, IMAGE_MIME_TYPE } from "@mantine/dropzone";
-import { IconUpload, IconPhoto, IconX, IconVideo } from "@tabler/icons-react";
+import { IconUpload, IconPhoto, IconX, IconVideo, IconLink } from "@tabler/icons-react";
 import axios from "axios";
 import { Dropzone as DocDropzone } from "@mantine/dropzone";
 import { v4 as uuidv4 } from "uuid";
-import { getQuillConfig, useQuillVideoHandlers } from "../../components/quill";
+import {
+  applyLinkToSelection,
+  enableImageClickSelection,
+  getQuillConfig,
+  useQuillVideoHandlers,
+} from "../../components/quill";
+import { AppLinkModal, NewsRedirectField } from "../../components/AppLinkPicker";
 import { DateTimePicker } from "@mantine/dates";
 
 type DocItem = { id: string; name: string; type: string; url: string };
@@ -53,6 +59,21 @@ export const NewsEdit: React.FC = () => {
 
   const { modules, formats } = getQuillConfig();
 
+  // Enlaces a pantallas de la app dentro del contenido (texto o imagen)
+  const [appLinkOpened, setAppLinkOpened] = useState(false);
+
+  useEffect(() => {
+    const quill = quillRef.current?.getEditor();
+    if (!quill) return;
+    return enableImageClickSelection(quill);
+  }, []);
+
+  const handleApplyAppLink = (url: string, label: string) => {
+    const quill = quillRef.current?.getEditor();
+    if (quill) applyLinkToSelection(quill, url, label);
+    setAppLinkOpened(false);
+  };
+
   const {
     saveButtonProps,
     getInputProps,
@@ -68,6 +89,7 @@ export const NewsEdit: React.FC = () => {
       content: "",
       organizationId: "",
       featuredImage: "",
+      redirectUrl: null as string | null,
       scheduledAt: null as Date | null,
       documents: [] as DocItem[],
     },
@@ -87,6 +109,7 @@ export const NewsEdit: React.FC = () => {
       content,
       organizationId,
       featuredImage,
+      redirectUrl,
       scheduledAt,
       documents: docsFromApi,
     } = data;
@@ -95,6 +118,7 @@ export const NewsEdit: React.FC = () => {
     setFieldValue("content", content || "");
     setFieldValue("organizationId", organizationId || "");
     setFieldValue("featuredImage", featuredImage || "");
+    setFieldValue("redirectUrl", redirectUrl || null);
 
     const initialDocs = normalizeDocs(docsFromApi);
     setDocuments(initialDocs);
@@ -245,6 +269,13 @@ export const NewsEdit: React.FC = () => {
         />
 
         <Box mt="sm">
+          <NewsRedirectField
+            value={getInputProps("redirectUrl").value}
+            onChange={(url) => setFieldValue("redirectUrl", url)}
+          />
+        </Box>
+
+        <Box mt="sm">
           <Text fw={500} size="sm" c="gray.7">
             Content
           </Text>
@@ -290,6 +321,17 @@ export const NewsEdit: React.FC = () => {
               onClick={handleVideoUrlInEditor}
             >
               Video URL
+            </Button>
+
+            <Button
+              type="button"
+              size="xs"
+              variant="light"
+              color="teal"
+              leftIcon={<IconLink size="1rem" />}
+              onClick={() => setAppLinkOpened(true)}
+            >
+              Enlace a la app
             </Button>
           </Group>
 
@@ -460,6 +502,12 @@ export const NewsEdit: React.FC = () => {
           )}
         </Box>
       </form>
+
+      <AppLinkModal
+        opened={appLinkOpened}
+        onClose={() => setAppLinkOpened(false)}
+        onConfirm={handleApplyAppLink}
+      />
     </Edit>
   );
 };

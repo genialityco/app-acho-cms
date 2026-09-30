@@ -67,6 +67,69 @@ class VideoBlot extends BlockEmbed {
 Quill.register(VideoBlot);
 
 /**
+ * Enlaces internos de la app (achoapp://evento/<id>, achoapp://seccion/<nombre>, ...).
+ * Quill por defecto convierte protocolos desconocidos en "about:blank".
+ */
+const Link = Quill.import("formats/link");
+if (!Link.PROTOCOL_WHITELIST.includes("achoapp")) {
+  Link.PROTOCOL_WHITELIST = [...Link.PROTOCOL_WHITELIST, "achoapp"];
+}
+
+class AppAwareLink extends Link {
+  static create(value: string) {
+    const node = super.create(value) as HTMLAnchorElement;
+    // target="_blank" impide que la app intercepte el enlace en Android
+    if (typeof value === "string" && value.toLowerCase().startsWith("achoapp://")) {
+      node.removeAttribute("target");
+      node.removeAttribute("rel");
+    }
+    return node;
+  }
+}
+
+Quill.register(AppAwareLink, true);
+
+/**
+ * Aplica un enlace a la selección actual del editor (texto o imagen).
+ * Si no hay nada seleccionado, inserta `label` como texto enlazado.
+ */
+export const applyLinkToSelection = (
+  quill: any,
+  url: string,
+  label: string,
+) => {
+  const range = quill.getSelection() ||
+    quill.selection?.savedRange || { index: quill.getLength() - 1, length: 0 };
+
+  if (range.length > 0) {
+    quill.formatText(range.index, range.length, "link", url, "user");
+    quill.setSelection(range.index + range.length, 0);
+    return;
+  }
+
+  const text = label.trim() || url;
+  quill.insertText(range.index, text, "link", url, "user");
+  quill.setSelection(range.index + text.length, 0);
+};
+
+/**
+ * Permite seleccionar una imagen del editor haciendo clic sobre ella,
+ * para poder enlazarla con applyLinkToSelection.
+ */
+export const enableImageClickSelection = (quill: any) => {
+  const handler = (event: MouseEvent) => {
+    const target = event.target as HTMLElement;
+    if (target?.tagName !== "IMG") return;
+    const blot = Quill.find(target);
+    if (!blot) return;
+    const index = quill.getIndex(blot);
+    quill.setSelection(index, 1, "user");
+  };
+  quill.root.addEventListener("click", handler);
+  return () => quill.root.removeEventListener("click", handler);
+};
+
+/**
  * OJO: Esto es para YouTube/Vimeo (iframe).
  * Pero nuestro VideoBlot es <video>, no sirve para YouTube/Vimeo.
  * Así que: si quieres YouTube/Vimeo, crea otro blot iframe.
