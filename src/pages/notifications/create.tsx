@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { Create, useForm } from "@refinedev/mantine";
-import { TextInput, Textarea, Box, Text } from "@mantine/core";
+import { TextInput, Box, Text } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 import MDEditor from "@uiw/react-md-editor";
+import { NotificationRouteField } from "../../components/NotificationRouteField";
 
 export const NotificationTemplateCreate: React.FC = () => {
-  const [dataError, setDataError] = useState<string | null>(null);
   const [bodyLength, setBodyLength] = useState(0); // Estado para contar caracteres del body
   const maxTitleLength = 50;
   const maxBodyLength = 750;
@@ -43,16 +43,6 @@ export const NotificationTemplateCreate: React.FC = () => {
     const newValue = value || "";
     setFieldValue("body", newValue);
     setBodyLength(newValue.length);
-  };
-
-  const handleDataChange = (value: string) => {
-    try {
-      const parsedData = JSON.parse(value);
-      setFieldValue("data", parsedData);
-      setDataError(null);
-    } catch {
-      setDataError("Invalid JSON format. Please correct the input.");
-    }
   };
 
   const handleScheduledAtChange = (value: Date | null) => {
@@ -104,19 +94,13 @@ export const NotificationTemplateCreate: React.FC = () => {
           clearable
           description="Select a future date/time to schedule" onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined}        />
 
-        {/* Datos adicionales */}
-        <Textarea
-          mt="sm"
-          label="Additional Data (JSON)"
-          placeholder='Example: {"key": "value", "route": "/home"}'
-          onChange={(event) => handleDataChange(event.currentTarget.value)}
-          error={dataError}
-        />
-        {dataError && (
-          <Text mt="xs" size="xs" color="red">
-            {dataError}
-          </Text>
-        )}
+        {/* Redirección al abrir la notificación (data.route) */}
+        <Box mt="sm">
+          <NotificationRouteField
+            value={getInputProps("data").value}
+            onChange={(data) => setFieldValue("data", data)}
+          />
+        </Box>
       </form>
     </Create>
   );

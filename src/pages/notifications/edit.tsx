@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Edit, useForm } from "@refinedev/mantine";
-import { TextInput, Text, Box, Group, Textarea } from "@mantine/core";
+import { TextInput, Text, Box } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 import MDEditor from "@uiw/react-md-editor";
+import { NotificationRouteField } from "../../components/NotificationRouteField";
 
 export const NotificationTemplateEdit: React.FC = () => {
-  const [dataError, setDataError] = useState<string | null>(null);
   const [bodyLength, setBodyLength] = useState(0); // Estado para contar caracteres del body
   const [hasScheduledAt, setHasScheduledAt] = useState(false); // Control para mostrar el campo scheduledAt
   const maxTitleLength = 50;
@@ -79,16 +79,6 @@ export const NotificationTemplateEdit: React.FC = () => {
     setBodyLength(newValue.length);
   };
 
-  const handleDataChange = (value: string) => {
-    try {
-      const parsedData = JSON.parse(value || "{}");
-      setFieldValue("data", parsedData);
-      setDataError(null);
-    } catch {
-      setDataError("Invalid JSON format. Please correct the input.");
-    }
-  };
-
   const handleScheduledAtChange = (value: Date | null) => {
     setFieldValue("scheduledAt", value);
   };
@@ -143,20 +133,13 @@ export const NotificationTemplateEdit: React.FC = () => {
           />
         )}
 
-        {/* Datos adicionales */}
-        <Textarea
-          mt="sm"
-          label="Additional Data (JSON)"
-          placeholder='Example: {"key": "value", "route": "/home"}'
-          value={JSON.stringify(getInputProps("data").value, null, 2)}
-          onChange={(event) => handleDataChange(event.currentTarget.value)}
-          error={dataError}
-        />
-        {dataError && (
-          <Text mt="xs" size="xs" color="red">
-            {dataError}
-          </Text>
-        )}
+        {/* Redirección al abrir la notificación (data.route) */}
+        <Box mt="sm">
+          <NotificationRouteField
+            value={getInputProps("data").value}
+            onChange={(data) => setFieldValue("data", data)}
+          />
+        </Box>
 
         {/* Estado enviado */}
         {/* <TextInput
