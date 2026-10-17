@@ -64,6 +64,7 @@ import { SurveyCreate, SurveyEdit, SurveyList } from "./pages/surveys";
 import ListStatistics from "./pages/statistics/list";
 import { NewsShow } from "./pages/news/show";
 import { MemberShow } from "./pages/member/show";
+import { MemberEdit } from "./pages/member/edit";
 import { NotificationShow } from "./pages/notifications/show";
 import { HighlightsShow } from "./pages/highlights/show";
 import { PromoModalPage } from "./pages/promo-modal";
@@ -290,8 +291,7 @@ const App: React.FC = () => {
                 </Route>
                 <Route path="/members">
                   <Route index element={<MemberList />} />
-                  {/* <Route path="create" element={<NewsCreate />} />
-                  <Route path="edit/:id" element={<NewsEdit />} /> */}
+                  <Route path="edit/:id" element={<MemberEdit />} />
                  <Route path="show/:id" element={<MemberShow />} /> 
                 </Route>
                 <Route path="/notification-templates">

@@ -11,6 +11,7 @@ import { Box, Group, ScrollArea, Table, Pagination } from "@mantine/core";
 import { ColumnFilter, ColumnSorter } from "../../components/table";
 import type { IMember } from "../../interfaces";
 import DropdownFilter from "../../components/Dropdown";
+import { ResetPasswordButton } from "./ResetPasswordButton";
 
 export const MemberList: React.FC = () => {
   const columns = React.useMemo<ColumnDef<IMember>[]>(
@@ -65,9 +66,7 @@ export const MemberList: React.FC = () => {
         id: "actions",
         header: "Actions",
         accessorKey: "_id",
-        cell: ({ getValue }) => (
-          <ActionButtons recordId={getValue() as string} />
-        ),
+        cell: ({ row }) => <ActionButtons record={row.original} />,
       },
     ],
     []
@@ -104,11 +103,17 @@ export const MemberList: React.FC = () => {
 };
 
 // Componente para los botones de acción
-const ActionButtons: React.FC<{ recordId: string }> = ({ recordId }) => (
+const ActionButtons: React.FC<{ record: IMember }> = ({ record }) => (
   <Group spacing="xs" noWrap>
-    <ShowButton hideText recordItemId={recordId} />
-    <EditButton hideText recordItemId={recordId} />
-    <DeleteButton hideText recordItemId={recordId} />
+    <ShowButton hideText recordItemId={record._id} />
+    <EditButton hideText recordItemId={record._id} />
+    <ResetPasswordButton
+      hideText
+      memberId={record._id}
+      fullName={record.properties?.fullName}
+      idNumber={record.properties?.idNumber}
+    />
+    <DeleteButton hideText recordItemId={record._id} />
   </Group>
 );
 
