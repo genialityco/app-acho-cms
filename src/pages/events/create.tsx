@@ -17,6 +17,11 @@ import { IconUpload, IconPhoto, IconX } from "@tabler/icons-react";
 import axios from "axios";
 import MDEditor from "@uiw/react-md-editor";
 import { EVENT_TYPE_LABELS } from "../../types/eventTypes";
+import {
+  DEFAULT_REGISTRATION_BUTTON,
+  RegistrationButtonFields,
+  toRegistrationButton,
+} from "../../components/RegistrationButtonFields";
 
 export const EventCreate: React.FC = () => {
   const apiUrl = useApiUrl();
@@ -53,6 +58,7 @@ export const EventCreate: React.FC = () => {
         certificate: true,
         posters: true,
       },
+      registrationButton: { ...DEFAULT_REGISTRATION_BUTTON },
     },
     validate: {
       name: (value) => (value.length < 2 ? "Event name is too short" : null),
@@ -324,6 +330,10 @@ export const EventCreate: React.FC = () => {
             />
           </Group>
         </Box>
+        <RegistrationButtonFields
+          value={toRegistrationButton(getInputProps("registrationButton").value)}
+          onChange={(value) => setFieldValue("registrationButton", value as any)}
+        />
       </form>
     </Create>
   );

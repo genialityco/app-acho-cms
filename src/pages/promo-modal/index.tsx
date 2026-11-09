@@ -31,6 +31,7 @@ import {
   IconAlertCircle,
   IconCheck,
 } from "@tabler/icons-react";
+import { AppLinkFields } from "../../components/AppLinkPicker";
 
 interface PromoConfig {
   isActive: boolean;
@@ -38,6 +39,7 @@ interface PromoConfig {
   imageUri: string;
   videoUri: string;
   ctaUrl: string;
+  ctaText: string;
   showButton: boolean;
   imageOnPressUrl: string;
 }
@@ -48,6 +50,7 @@ const DEFAULT_CONFIG: PromoConfig = {
   imageUri: "",
   videoUri: "",
   ctaUrl: "",
+  ctaText: "",
   showButton: false,
   imageOnPressUrl: "",
 };
@@ -56,6 +59,13 @@ export const PromoModalPage: React.FC = () => {
   const apiUrl = useApiUrl();
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const [config, setConfig] = useState<PromoConfig>(DEFAULT_CONFIG);
+  const [imageLinkEnabled, setImageLinkEnabled] = useState(false);
+
+  // Actualiza un campo con un valor ya leído. No leer e.currentTarget dentro del
+  // updater de setConfig: React puede ejecutarlo después del evento, cuando
+  // currentTarget ya es null, y la página se rompe al escribir/borrar rápido.
+  const setField = <K extends keyof PromoConfig>(key: K, value: PromoConfig[K]) =>
+    setConfig((prev) => ({ ...prev, [key]: value }));
 
   const { data, isLoading, isError } = useCustom<{ data: PromoConfig }>({
     url: `${apiUrl}/promo-modal`,
@@ -68,6 +78,7 @@ export const PromoModalPage: React.FC = () => {
     const fetched = data?.data?.data;
     if (fetched && Object.keys(fetched).length > 0) {
       setConfig({ ...DEFAULT_CONFIG, ...fetched });
+      setImageLinkEnabled(Boolean(fetched.imageOnPressUrl));
     }
   }, [data]);
 
@@ -110,11 +121,7 @@ export const PromoModalPage: React.FC = () => {
       });
       const url: string = response.data.imageUrl;
       if (config.mediaType === "image") {
-        setConfig((prev) => ({
-          ...prev,
-          imageUri: url,
-          imageOnPressUrl: prev.imageOnPressUrl || url,
-        }));
+        setConfig((prev) => ({ ...prev, imageUri: url }));
       } else {
         setConfig((prev) => ({ ...prev, videoUri: url }));
       }
@@ -138,7 +145,7 @@ export const PromoModalPage: React.FC = () => {
 
   const deleteMedia = () => {
     if (config.mediaType === "image") {
-      setConfig((prev) => ({ ...prev, imageUri: "", imageOnPressUrl: "" }));
+      setConfig((prev) => ({ ...prev, imageUri: "" }));
     } else {
       setConfig((prev) => ({ ...prev, videoUri: "" }));
     }
@@ -181,9 +188,7 @@ export const PromoModalPage: React.FC = () => {
         <Switch
           label="Mostrar modal al abrir la app"
           checked={config.isActive}
-          onChange={(e) =>
-            setConfig((prev) => ({ ...prev, isActive: e.currentTarget.checked }))
-          }
+          onChange={(e) => setField("isActive", e.currentTarget.checked)}
           size="md"
           color="teal"
         />
@@ -292,44 +297,54 @@ export const PromoModalPage: React.FC = () => {
         <Text weight={600} mb="sm">
           Configuración de enlaces
         </Text>
-        <Stack spacing="sm">
+        <Stack spacing="md">
           {config.mediaType === "image" && (
-            <TextInput
-              label="URL al presionar la imagen"
-              description="Abre este enlace cuando el usuario toca la imagen"
-              placeholder="https://..."
-              value={config.imageOnPressUrl}
-              onChange={(e) =>
-                setConfig((prev) => ({
-                  ...prev,
-                  imageOnPressUrl: e.currentTarget.value,
-                }))
-              }
-            />
+            <Stack spacing="xs">
+              <Switch
+                label="Abrir un enlace al tocar la imagen"
+                checked={imageLinkEnabled}
+                onChange={(e) => {
+                  const checked = e.currentTarget.checked;
+                  setImageLinkEnabled(checked);
+                  if (!checked) setField("imageOnPressUrl", "");
+                }}
+                color="teal"
+              />
+              {imageLinkEnabled && (
+                <AppLinkFields
+                  label="Al tocar la imagen, llevar a"
+                  value={config.imageOnPressUrl}
+                  onChange={(url) => setField("imageOnPressUrl", url)}
+                />
+              )}
+            </Stack>
           )}
-          <TextInput
-            label="URL del botón CTA"
-            description='Enlace del botón "Ir a la página" (si está activado)'
-            placeholder="https://..."
-            value={config.ctaUrl}
-            onChange={(e) =>
-              setConfig((prev) => ({
-                ...prev,
-                ctaUrl: e.currentTarget.value,
-              }))
-            }
-          />
-          <Switch
-            label='Mostrar botón "Ir a la página"'
-            checked={config.showButton}
-            onChange={(e) =>
-              setConfig((prev) => ({
-                ...prev,
-                showButton: e.currentTarget.checked,
-              }))
-            }
-            color="teal"
-          />
+
+          <Divider />
+
+          <Stack spacing="xs">
+            <Switch
+              label="Mostrar botón debajo del contenido"
+              checked={config.showButton}
+              onChange={(e) => setField("showButton", e.currentTarget.checked)}
+              color="teal"
+            />
+            {config.showButton && (
+              <>
+                <TextInput
+                  label="Texto del botón"
+                  placeholder="Ir a la página"
+                  value={config.ctaText}
+                  onChange={(e) => setField("ctaText", e.currentTarget.value)}
+                />
+                <AppLinkFields
+                  label="Al tocar el botón, llevar a"
+                  value={config.ctaUrl}
+                  onChange={(url) => setField("ctaUrl", url)}
+                />
+              </>
+            )}
+          </Stack>
         </Stack>
       </Paper>
 

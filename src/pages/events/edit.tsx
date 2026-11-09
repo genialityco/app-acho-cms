@@ -23,6 +23,11 @@ import { AgendaEdit } from "../agendas";
 import { parseISO, formatISO } from "date-fns";
 import { useParams } from "react-router-dom";
 import { EVENT_TYPE_LABELS } from "../../types/eventTypes";
+import {
+  DEFAULT_REGISTRATION_BUTTON,
+  RegistrationButtonFields,
+  toRegistrationButton,
+} from "../../components/RegistrationButtonFields";
 
 export const EventEdit: React.FC = () => {
   const apiUrl = useApiUrl();
@@ -67,6 +72,7 @@ export const EventEdit: React.FC = () => {
           certificate: false,
           posters: false,
         },
+        registrationButton: { ...DEFAULT_REGISTRATION_BUTTON },
       },
       validate: {
         name: (value) => (value.length < 2 ? "Event name is too short" : null),
@@ -130,6 +136,7 @@ export const EventEdit: React.FC = () => {
         location,
         styles,
         eventSections,
+        registrationButton,
       } = data.data;
 
       const parsedStartDate = startDate ? parseISO(startDate) : null;
@@ -160,6 +167,7 @@ export const EventEdit: React.FC = () => {
         eventSections?.certificate ?? false
       );
       setFieldValue("eventSections.posters", eventSections?.posters ?? false);
+      setFieldValue("registrationButton", toRegistrationButton(registrationButton) as any);
     }
   }, [data, setFieldValue]);
 
@@ -450,6 +458,10 @@ export const EventEdit: React.FC = () => {
             />
           </Group>
         </Box>
+        <RegistrationButtonFields
+          value={toRegistrationButton(getInputProps("registrationButton").value)}
+          onChange={(value) => setFieldValue("registrationButton", value as any)}
+        />
       </form>
     </Edit>
   );
