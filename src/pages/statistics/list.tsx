@@ -23,6 +23,7 @@ import {
   IconBrandAndroid,
   IconCalendar,
   IconInfoCircle,
+  IconRefresh,
 } from "@tabler/icons-react";
 import "dayjs/locale/es";
 import { API_URL } from "../../components/dataProvider/customGenRestDataProvider";
@@ -46,7 +47,8 @@ type Realtime = {
 };
 
 const COLORS = { other: "#4d93d0", newUsers: "#2f9e44", returning: "#f08c00" };
-const REALTIME_REFRESH_MS = 60_000;
+const REALTIME_REFRESH_MS = 60_000; // GA4 se cachea 60 s en el backend
+const STATS_REFRESH_MS = 30_000;
 const PLATFORM_LABEL: Record<string, string> = { ANDROID: "Android", IOS: "iOS", WEB: "Web" };
 
 const bogotaToday = () => new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 10);
@@ -64,6 +66,8 @@ const formatDay = (day: string) => {
   return `${d}/${m}`;
 };
 const fmt = (n: number) => n.toLocaleString("es-CO");
+// Activos que ya venian usando la app: ni nuevos ni regresaron tras inactividad
+const recurring = (d: DayStat) => Math.max(0, d.active - d.newUsers - d.returning);
 
 async function getJson<T>(path: string): Promise<T> {
   const res = await fetch(`${API_URL}${path}`);
@@ -84,28 +88,70 @@ export default function AppStatistics() {
   const [helpOpen, setHelpOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState("10");
+  // Cada cambio de `tick` recarga los datos en segundo plano (sin cargador ni perder la pagina)
+  const [tick, setTick] = useState(0);
+  const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      // No consultar mientras la pestaña esta oculta; al volver se actualiza enseguida
+      if (document.visibilityState === "visible") setTick((t) => t + 1);
+    }, STATS_REFRESH_MS);
+    const onVisible = () => document.visibilityState === "visible" && setTick((t) => t + 1);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, []);
 
   useEffect(() => {
     getJson<Stats>(`/app-activity/stats?from=${todayStr}&to=${todayStr}`)
       .then(setBase)
       .catch(() => setStatsError("No se pudieron cargar las estadísticas"));
-  }, [todayStr]);
+  }, [todayStr, tick]);
 
   const trackingSince = base?.trackingSince ?? null;
   const firstDay = trackingSince && trackingSince < todayStr ? trackingSince : todayStr;
   const hasRange = !!(range[0] && range[1]);
   const from = hasRange ? toDayStr(range[0] as Date) : firstDay;
   const to = hasRange ? toDayStr(range[1] as Date) : todayStr;
+  const ready = !!base;
 
+  // Cambio de rango: carga con cargador y vuelve a la primera pagina
   useEffect(() => {
-    if (!base) return;
+    if (!ready) return;
     setStats(null);
     setStatsError(null);
     setPage(1);
     getJson<Stats>(`/app-activity/stats?from=${from}&to=${to}`)
-      .then(setStats)
+      .then((s) => {
+        setStats(s);
+        setUpdatedAt(new Date());
+      })
       .catch(() => setStatsError("No se pudieron cargar las estadísticas"));
-  }, [base, from, to]);
+  }, [ready, from, to]);
+
+  // Actualizacion periodica: reemplaza los datos sin tocar la vista
+  useEffect(() => {
+    if (!ready || tick === 0) return;
+    let cancelled = false;
+    setRefreshing(true);
+    getJson<Stats>(`/app-activity/stats?from=${from}&to=${to}`)
+      .then((s) => {
+        if (cancelled) return;
+        setStats(s);
+        setStatsError(null);
+        setUpdatedAt(new Date());
+      })
+      .catch(() => {}) // si falla una actualizacion, se conservan los datos que ya se ven
+      .finally(() => !cancelled && setRefreshing(false));
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tick]);
 
   useEffect(() => {
     let cancelled = false;
@@ -126,7 +172,9 @@ export default function AppStatistics() {
   const rows = useMemo(() => [...days].reverse(), [days]); // el mas reciente primero
   const size = Number(pageSize);
   const totalPages = Math.max(1, Math.ceil(rows.length / size));
-  const pageRows = rows.slice((page - 1) * size, page * size);
+  // Si una actualizacion deja menos paginas, no quedarse en una pagina vacia
+  const currentPage = Math.min(page, totalPages);
+  const pageRows = rows.slice((currentPage - 1) * size, currentPage * size);
   const todayActive = base?.days[base.days.length - 1]?.active ?? 0;
 
   return (
@@ -137,7 +185,28 @@ export default function AppStatistics() {
         gapDays={stats?.returningGapDays ?? 90}
       />
       <Group position="apart" align="flex-end">
-        <Title order={2}>Estadísticas de la App</Title>
+        <div>
+          <Title order={2}>Estadísticas de la App</Title>
+          <Group spacing={4} mt={4}>
+            <Text size="xs" color="dimmed">
+              {updatedAt
+                ? `Actualizado a las ${updatedAt.toLocaleTimeString("es-CO")} · se actualiza solo cada ${STATS_REFRESH_MS / 1000} s`
+                : "Cargando…"}
+            </Text>
+            <ActionIcon
+              size="xs"
+              variant="subtle"
+              color="gray"
+              loading={refreshing}
+              disabled={!ready}
+              onClick={() => setTick((t) => t + 1)}
+              aria-label="Actualizar ahora"
+              title="Actualizar ahora"
+            >
+              <IconRefresh size={14} />
+            </ActionIcon>
+          </Group>
+        </div>
         <DatePickerInput
           type="range"
           label="Filtrar por fechas"
@@ -219,6 +288,7 @@ export default function AppStatistics() {
                 <tr>
                   <th>Día</th>
                   <th style={{ textAlign: "right" }}>Activos</th>
+                  <th style={{ textAlign: "right" }}>Recurrentes</th>
                   <th style={{ textAlign: "right" }}>Nuevos</th>
                   <th style={{ textAlign: "right" }}>Regresaron tras inactividad</th>
                   <th style={{ textAlign: "right" }}>Aperturas</th>
@@ -236,6 +306,7 @@ export default function AppStatistics() {
                       )}
                     </td>
                     <td style={{ textAlign: "right" }}>{fmt(d.active)}</td>
+                    <td style={{ textAlign: "right" }}>{fmt(recurring(d))}</td>
                     <td style={{ textAlign: "right" }}>{fmt(d.newUsers)}</td>
                     <td style={{ textAlign: "right" }}>{fmt(d.returning)}</td>
                     <td style={{ textAlign: "right" }}>{fmt(d.opens)}</td>
@@ -259,7 +330,7 @@ export default function AppStatistics() {
                   w={70}
                 />
               </Group>
-              {totalPages > 1 && <Pagination total={totalPages} value={page} onChange={setPage} size="sm" />}
+              {totalPages > 1 && <Pagination total={totalPages} value={currentPage} onChange={setPage} size="sm" />}
             </Group>
           </Paper>
         </>
@@ -305,9 +376,14 @@ function MetricsHelpModal({
 }) {
   const items = [
     {
-      color: COLORS.other,
+      color: "#212529",
       title: "Activos",
-      text: "Personas distintas que abrieron la app ese día con su sesión iniciada. Cada persona cuenta una sola vez por día, aunque la abra varias veces.",
+      text: "Personas distintas que abrieron la app ese día con su sesión iniciada. Cada persona cuenta una sola vez por día, aunque la abra varias veces. Activos = Recurrentes + Nuevos + Regresaron tras inactividad.",
+    },
+    {
+      color: COLORS.other,
+      title: "Recurrentes",
+      text: `Activos que ya venían usando la app: no es su primera vez y su acceso anterior fue hace menos de ${gapDays} días.`,
     },
     {
       color: COLORS.newUsers,
@@ -343,9 +419,11 @@ function MetricsHelpModal({
           </Group>
         ))}
         <Text size="sm" color="dimmed">
-          Los activos que no son nuevos ni regresaron tras inactividad son <b>recurrentes</b>: personas que
-          ya venían usando la app. Los días se cuentan en hora de Colombia, y solo se registra cuando la
-          app se abre desde cero (no cuando se retoma desde segundo plano).
+          Los días se cuentan en hora de Colombia. Se registra una apertura cuando la app arranca: al
+          abrirla después de cerrarla por completo, después de reiniciar el celular o cuando el sistema
+          la había cerrado por estar mucho tiempo sin usarse. Si la persona solo sale a otra app o a la
+          pantalla de inicio y vuelve enseguida, la app sigue abierta en segundo plano y no se cuenta
+          como una apertura nueva.
         </Text>
       </Stack>
     </Modal>
@@ -475,7 +553,7 @@ function DailyChart({ days }: { days: DayStat[] }) {
         {days.map((d, i) => {
           const x = PAD_LEFT + i * bw + bw * 0.15;
           const w = bw * 0.7;
-          const other = Math.max(0, d.active - d.newUsers - d.returning);
+          const other = recurring(d);
           const segs = [
             { v: other, c: COLORS.other },
             { v: d.newUsers, c: COLORS.newUsers },
@@ -485,7 +563,7 @@ function DailyChart({ days }: { days: DayStat[] }) {
           return (
             <g key={d.day}>
               <title>
-                {`${d.day}\nActivos: ${d.active}\nNuevos: ${d.newUsers}\nRegresaron tras inactividad: ${d.returning}\nAperturas: ${d.opens}`}
+                {`${d.day}\nActivos: ${d.active}\nRecurrentes: ${other}\nNuevos: ${d.newUsers}\nRegresaron tras inactividad: ${d.returning}\nAperturas: ${d.opens}`}
               </title>
               <rect x={PAD_LEFT + i * bw} y={8} width={bw} height={plotH} fill="transparent" />
               {segs.map((s, k) => {
