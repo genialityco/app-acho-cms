@@ -1,19 +1,30 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  ActionIcon,
   Alert,
   Anchor,
   Badge,
   Group,
   Loader,
+  Modal,
   Paper,
-  SegmentedControl,
+  Pagination,
+  Select,
   SimpleGrid,
   Stack,
   Table,
   Text,
   Title,
 } from "@mantine/core";
-import { IconAlertCircle, IconApple, IconBrandAndroid } from "@tabler/icons-react";
+import { DatePickerInput } from "@mantine/dates";
+import {
+  IconAlertCircle,
+  IconApple,
+  IconBrandAndroid,
+  IconCalendar,
+  IconInfoCircle,
+} from "@tabler/icons-react";
+import "dayjs/locale/es";
 import { API_URL } from "../../components/dataProvider/customGenRestDataProvider";
 
 type DayStat = { day: string; active: number; newUsers: number; returning: number; opens: number };
@@ -39,8 +50,15 @@ const REALTIME_REFRESH_MS = 60_000;
 const PLATFORM_LABEL: Record<string, string> = { ANDROID: "Android", IOS: "iOS", WEB: "Web" };
 
 const bogotaToday = () => new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 10);
-const shiftDay = (day: string, delta: number) =>
-  new Date(Date.parse(day) + delta * 86400000).toISOString().slice(0, 10);
+// Fechas locales (sin zona horaria) para el selector: "YYYY-MM-DD" <-> Date
+const parseDay = (day: string) => {
+  const [y, m, d] = day.split("-").map(Number);
+  return new Date(y, m - 1, d);
+};
+const pad = (n: number) => String(n).padStart(2, "0");
+const toDayStr = (date: Date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+const formatLongDay = (day: string) =>
+  parseDay(day).toLocaleDateString("es-CO", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
 const formatDay = (day: string) => {
   const [, m, d] = day.split("-");
   return `${d}/${m}`;
@@ -55,20 +73,39 @@ async function getJson<T>(path: string): Promise<T> {
 }
 
 export default function AppStatistics() {
-  const [range, setRange] = useState("30");
+  const todayStr = bogotaToday();
+  // Estadisticas de hoy + primer dia con datos (antes de eso no hay registros)
+  const [base, setBase] = useState<Stats | null>(null);
+  // Rango elegido en el filtro; vacio = desde el primer dia con datos hasta hoy
+  const [range, setRange] = useState<[Date | null, Date | null]>([null, null]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [statsError, setStatsError] = useState<string | null>(null);
   const [realtime, setRealtime] = useState<Realtime | null>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState("10");
 
   useEffect(() => {
-    const to = bogotaToday();
-    const from = shiftDay(to, -(Number(range) - 1));
+    getJson<Stats>(`/app-activity/stats?from=${todayStr}&to=${todayStr}`)
+      .then(setBase)
+      .catch(() => setStatsError("No se pudieron cargar las estadísticas"));
+  }, [todayStr]);
+
+  const trackingSince = base?.trackingSince ?? null;
+  const firstDay = trackingSince && trackingSince < todayStr ? trackingSince : todayStr;
+  const hasRange = !!(range[0] && range[1]);
+  const from = hasRange ? toDayStr(range[0] as Date) : firstDay;
+  const to = hasRange ? toDayStr(range[1] as Date) : todayStr;
+
+  useEffect(() => {
+    if (!base) return;
     setStats(null);
     setStatsError(null);
+    setPage(1);
     getJson<Stats>(`/app-activity/stats?from=${from}&to=${to}`)
       .then(setStats)
       .catch(() => setStatsError("No se pudieron cargar las estadísticas"));
-  }, [range]);
+  }, [base, from, to]);
 
   useEffect(() => {
     let cancelled = false;
@@ -84,20 +121,37 @@ export default function AppStatistics() {
     };
   }, []);
 
-  const today = stats?.days[stats.days.length - 1];
+  // Nunca mostrar dias anteriores al primer registro (serian ceros que no son reales)
+  const days = useMemo(() => (stats?.days ?? []).filter((d) => d.day >= firstDay), [stats, firstDay]);
+  const rows = useMemo(() => [...days].reverse(), [days]); // el mas reciente primero
+  const size = Number(pageSize);
+  const totalPages = Math.max(1, Math.ceil(rows.length / size));
+  const pageRows = rows.slice((page - 1) * size, page * size);
+  const todayActive = base?.days[base.days.length - 1]?.active ?? 0;
 
   return (
     <Stack spacing="lg" p="md">
-      <Group position="apart">
+      <MetricsHelpModal
+        opened={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        gapDays={stats?.returningGapDays ?? 90}
+      />
+      <Group position="apart" align="flex-end">
         <Title order={2}>Estadísticas de la App</Title>
-        <SegmentedControl
+        <DatePickerInput
+          type="range"
+          label="Filtrar por fechas"
+          locale="es"
+          valueFormat="DD/MM/YYYY"
           value={range}
           onChange={setRange}
-          data={[
-            { label: "7 días", value: "7" },
-            { label: "30 días", value: "30" },
-            { label: "90 días", value: "90" },
-          ]}
+          minDate={parseDay(firstDay)}
+          maxDate={parseDay(todayStr)}
+          clearable
+          allowSingleDateInRange
+          icon={<IconCalendar size={16} />}
+          w={280}
+          disabled={!base}
         />
       </Group>
 
@@ -112,28 +166,23 @@ export default function AppStatistics() {
 
       {stats && (
         <>
-          {stats.trackingSince ? (
-            <Text size="sm" color="dimmed">
-              Datos registrados desde el {stats.trackingSince}. Cuenta a las personas que abren la app
-              con la sesión iniciada (un acceso por persona y día, hora de Colombia).
-            </Text>
-          ) : (
-            <Alert color="blue" icon={<IconAlertCircle size={16} />}>
-              Aún no hay accesos registrados. Los datos empiezan a contarse desde que se despliega el
-              registro de actividad en el backend.
-            </Alert>
-          )}
+          <Text size="sm" color="dimmed">
+            {trackingSince
+              ? `Los datos se registran desde el ${formatLongDay(trackingSince)}; antes no hay información, por eso el filtro no deja elegir fechas anteriores.`
+              : "Aún no hay accesos registrados; los datos empiezan a contarse desde hoy."}{" "}
+            Mostrando del {formatLongDay(from)} al {formatLongDay(to)}.
+          </Text>
 
           <SimpleGrid cols={4} breakpoints={[{ maxWidth: "md", cols: 2 }, { maxWidth: "xs", cols: 1 }]}>
-            <StatCard label="Activos hoy" value={today?.active ?? 0} />
+            <StatCard label="Activos hoy" value={todayActive} />
             <StatCard
-              label={`Personas distintas (${range} días)`}
+              label={hasRange ? "Personas distintas (en el rango)" : "Personas distintas (total)"}
               value={stats.totals.uniqueUsers}
               color={COLORS.other}
             />
             <StatCard label="Nuevos" value={stats.totals.newUsers} color={COLORS.newUsers} />
             <StatCard
-              label={`Volvieron tras ${stats.returningGapDays}+ días`}
+              label="Regresaron tras inactividad"
               value={stats.totals.returning}
               color={COLORS.returning}
             />
@@ -145,30 +194,47 @@ export default function AppStatistics() {
               <Group spacing="md">
                 <Legend color={COLORS.other} label="Recurrentes" />
                 <Legend color={COLORS.newUsers} label="Nuevos" />
-                <Legend color={COLORS.returning} label={`Volvieron tras ${stats.returningGapDays}+ días`} />
+                <Legend color={COLORS.returning} label="Regresaron tras inactividad" />
               </Group>
             </Group>
-            <DailyChart days={stats.days} />
+            <DailyChart days={days} />
           </Paper>
 
           <Paper withBorder radius="md" p="md">
-            <Text weight={600} mb="sm">
-              Detalle por día
-            </Text>
+            <Group spacing={4} mb="sm">
+              <Text weight={600}>Detalle por día</Text>
+              <ActionIcon
+                size="sm"
+                variant="subtle"
+                color="gray"
+                onClick={() => setHelpOpen(true)}
+                aria-label="¿Qué significa cada columna?"
+                title="¿Qué significa cada columna?"
+              >
+                <IconInfoCircle size={16} />
+              </ActionIcon>
+            </Group>
             <Table striped highlightOnHover fontSize="sm">
               <thead>
                 <tr>
                   <th>Día</th>
                   <th style={{ textAlign: "right" }}>Activos</th>
                   <th style={{ textAlign: "right" }}>Nuevos</th>
-                  <th style={{ textAlign: "right" }}>Volvieron tras {stats.returningGapDays}+ días</th>
+                  <th style={{ textAlign: "right" }}>Regresaron tras inactividad</th>
                   <th style={{ textAlign: "right" }}>Aperturas</th>
                 </tr>
               </thead>
               <tbody>
-                {[...stats.days].reverse().map((d) => (
+                {pageRows.map((d) => (
                   <tr key={d.day}>
-                    <td>{d.day}</td>
+                    <td>
+                      {formatLongDay(d.day)}
+                      {d.day === todayStr && (
+                        <Badge size="xs" ml={6} variant="light">
+                          Hoy
+                        </Badge>
+                      )}
+                    </td>
                     <td style={{ textAlign: "right" }}>{fmt(d.active)}</td>
                     <td style={{ textAlign: "right" }}>{fmt(d.newUsers)}</td>
                     <td style={{ textAlign: "right" }}>{fmt(d.returning)}</td>
@@ -177,6 +243,24 @@ export default function AppStatistics() {
                 ))}
               </tbody>
             </Table>
+            <Group position="apart" mt="md">
+              <Group spacing="xs">
+                <Text size="sm" color="dimmed">
+                  Filas por página
+                </Text>
+                <Select
+                  value={pageSize}
+                  onChange={(v) => {
+                    setPageSize(v ?? "10");
+                    setPage(1);
+                  }}
+                  data={["5", "10", "30", "50"]}
+                  size="xs"
+                  w={70}
+                />
+              </Group>
+              {totalPages > 1 && <Pagination total={totalPages} value={page} onChange={setPage} size="sm" />}
+            </Group>
           </Paper>
         </>
       )}
@@ -207,6 +291,64 @@ export default function AppStatistics() {
         </Group>
       </Paper>
     </Stack>
+  );
+}
+
+function MetricsHelpModal({
+  opened,
+  onClose,
+  gapDays,
+}: {
+  opened: boolean;
+  onClose: () => void;
+  gapDays: number;
+}) {
+  const items = [
+    {
+      color: COLORS.other,
+      title: "Activos",
+      text: "Personas distintas que abrieron la app ese día con su sesión iniciada. Cada persona cuenta una sola vez por día, aunque la abra varias veces.",
+    },
+    {
+      color: COLORS.newUsers,
+      title: "Nuevos",
+      text: "Personas que abrieron la app por primera vez ese día: no tenían ningún acceso registrado antes (por ejemplo, alguien que acaba de crear su cuenta).",
+    },
+    {
+      color: COLORS.returning,
+      title: "Regresaron tras inactividad",
+      text: `Personas que volvieron a abrir la app después de ${gapDays} días o más (unos 3 meses) sin entrar. Sirve para ver cuántos usuarios "dormidos" se recuperan, por ejemplo después de enviar una notificación o anunciar un evento.`,
+    },
+    {
+      color: "#868e96",
+      title: "Aperturas",
+      text: "Total de veces que se abrió la app ese día, sumando a todas las personas. Si una persona la abre 3 veces, suma 1 en Activos y 3 en Aperturas.",
+    },
+  ];
+
+  return (
+    <Modal opened={opened} onClose={onClose} title={<Text weight={700}>¿Qué significa cada dato?</Text>} size="lg">
+      <Stack spacing="md">
+        {items.map((item) => (
+          <Group key={item.title} spacing="sm" noWrap align="flex-start">
+            <div
+              style={{ width: 12, height: 12, borderRadius: 3, background: item.color, marginTop: 5, flexShrink: 0 }}
+            />
+            <div>
+              <Text weight={600}>{item.title}</Text>
+              <Text size="sm" color="dimmed">
+                {item.text}
+              </Text>
+            </div>
+          </Group>
+        ))}
+        <Text size="sm" color="dimmed">
+          Los activos que no son nuevos ni regresaron tras inactividad son <b>recurrentes</b>: personas que
+          ya venían usando la app. Los días se cuentan en hora de Colombia, y solo se registra cuando la
+          app se abre desde cero (no cuando se retoma desde segundo plano).
+        </Text>
+      </Stack>
+    </Modal>
   );
 }
 
@@ -311,7 +453,8 @@ function DailyChart({ days }: { days: DayStat[] }) {
   const PAD_LEFT = 36;
   const W = Math.max(600, days.length * 18);
   const plotH = H - PAD_BOTTOM - 8;
-  const bw = (W - PAD_LEFT) / days.length;
+  // Ancho maximo por dia: con pocos dias (al inicio) las barras no se estiran
+  const bw = Math.min(56, (W - PAD_LEFT) / Math.max(1, days.length));
   const labelEvery = Math.ceil(days.length / 15);
   const ticks = [0, Math.round(max / 2), max];
 
@@ -342,7 +485,7 @@ function DailyChart({ days }: { days: DayStat[] }) {
           return (
             <g key={d.day}>
               <title>
-                {`${d.day}\nActivos: ${d.active}\nNuevos: ${d.newUsers}\nVolvieron tras 90+ días: ${d.returning}\nAperturas: ${d.opens}`}
+                {`${d.day}\nActivos: ${d.active}\nNuevos: ${d.newUsers}\nRegresaron tras inactividad: ${d.returning}\nAperturas: ${d.opens}`}
               </title>
               <rect x={PAD_LEFT + i * bw} y={8} width={bw} height={plotH} fill="transparent" />
               {segs.map((s, k) => {
